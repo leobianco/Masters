@@ -1,0 +1,62 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{./images/}}}
+
+\begin{document}
+	
+\section{Proof of Proposition \ref{prop:mf-elbo}} \label{sec:proof-mf-elbo}
+
+Similarly to \cite{mariadassou}, substitute Equation 
+\eqref{eq:mean-field-approx} into the ELBO of Equation 
+\eqref{eq:variational-decomposition}, to get
+\begin{dmath}
+	F = \sum_{i=1}^n \sum_{k=1}^K \esp[q]{Z_{ik}} \log{\pi_k} +
+	\sum_{j > i} A_{ij} \esp[q]{\log{\gamma_{Z_i, Z_j}}} + \left( 1 -
+	A_{ij} \right) \esp[q]{\log{\left(1-\gamma_{Z_i, Z_j}\right)}} +
+	\mathcal H \left(q\right),
+	\label{eq:rough-elbo}
+\end{dmath}
+where \(\mathcal H (q) = -\sum_Z q(Z) \log(Z) \) is the entropy of the
+distribution $q$. This expression can be further simplified by noticing that 
+the expectations appearing in it can be explicitly calculated. First, notice 
+that $\mathbb E_q [Z_{ik}] = \tau_{ik}$. Also notice that for each \(i, j\),
+\begin{align*}
+	\esp[q]{\log{\gamma_{Z_i, Z_j}}} &= \sum_Z q \left(Z \right)
+	\log{\gamma_{Z_i, Z_j}} \\
+	&= \sum_{Z_i, Z_j} q \left( Z_i, Z_j \right) \log{\gamma_{Z_i, Z_j}} \\
+	&= \sum_{Z_i, Z_j} m \left( Z_i, \tau_i \right) m \left( Z_j, \tau_j
+	\right) \log{\gamma_{Z_i, Z_j}} \\
+	&= \sum_{Z_i, Z_j} \prod_{k=1}^K \tau_{ik}^{Z_{ik}} \prod_{l=1}^K
+	\tau_{jl}^{Z_{jl}} \log{\gamma_{Z_i, Z_j}} \\
+	&= \sum_{k=1}^K \sum_{l = 1}^K \tau_{ik} \tau_{jl}
+	\log{\gamma_{kl}}.
+\end{align*}
+Similarly, \(\mathbb E_{q} [\log{(1 - \gamma_{Z_i, Z_j})}] = \sum_{k,l}
+\tau_{ik} \tau_{jl} \log{(1 - \gamma_{kl})}\). The entropy term can also be 
+simplified by noticing that
+\begin{align*}
+	\mathcal H \left( q \right) &= \mathcal H \left( \prod_{i=1}^n 
+	m \left( Z_i; \tau_i \right) \right) \\
+	&= - \sum_Z \left( \prod_{i=1}^n m \left( Z_i; \tau_i \right) \right)
+	\log \prod_{j} m \left( Z_j; \tau_j \right) \\
+	&= - \sum_{j=1}^n \sum_{Z} \left( \prod_{i=1}^n m \left( Z_i; \tau_i 
+	\right) \right) \log m \left( Z_j; \tau_j \right) \\
+	&= - \sum_{j=1}^n \sum_{Z_j} m \left( Z_j, \tau_j \right) \log{m \left(
+		Z_j, \tau_j \right)} \\
+	&= \sum_{j=1}^n \mathcal H \left( m \left( Z_j, \tau_j \right) \right),
+\end{align*}
+where the sum in \(Z\) became a sum in \(Z_j\) by marginalizing out the
+remaining multinomial mass functions. Each such term can be calculated:
+\begin{align*}
+	\mathcal H \left( m \left( Z_j, \tau_j \right) \right) &= -
+	\sum_{Z_j} m \left( Z_j, \tau_j \right) \log{m \left( Z_j, \tau_j
+		\right)} \\
+	&= - \sum_{Z_j} \left( \prod_{i=1}^K \tau_{ji}^{Z_{ji}}\right)
+	\sum_{k = 1}^K Z_{jk} \log{\tau_{jk}} \\
+	&= - \sum_{i=1}^K \tau_{ji} \log{\tau_{ji}},
+\end{align*}
+where the expression is simplified by considering that the possible values
+for $Z_j$ are the different indices where its only non-zero component can be. 
+Substituting all of this back into Equation \eqref{eq:rough-elbo}, one finds 
+that the expression for the mean-field ELBO, as in the theorem statement.
+
+\end{document}

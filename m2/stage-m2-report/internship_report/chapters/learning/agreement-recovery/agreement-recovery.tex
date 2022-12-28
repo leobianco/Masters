@@ -1,0 +1,98 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{./images/}}}
+
+\begin{document}
+This chapter adresses the question of quantitatively measuring an algorithm's 
+ability to recover \textit{ground truth} communities on a graph sampled from a 
+model, understanding what factors might impact its ability to perform such 
+recovery, and then specializes this investigation to the case of the two 
+algorithms of the previous chapter.
+
+\section{Agreement and degrees of recovery}  % ✅
+This section first defines metrics for the quality of a particular estimation 
+produced by an algorithm, and then uses these metrics to define its global 
+ability to rexover communities.
+
+\subsection{Agreement}
+Consider the task of evaluating the answer returned by any algorithm for 
+community detection. Assume knowledge of the true vector of community 
+assignments \(Z^\star\). Given an estimate \(\hat Z\) for \(Z^\star\) how can 
+one measure the quality of such an estimation? The most intuitive metric for 
+this is the \textit{agreement}, which is simply the average number of nodes 
+whose communities were estimated correctly, up to an arbitrary relabeling of 
+the communities. This relabeling must be taken into account since the choice of 
+integer associated to a community is arbitrary, and any relabeling defines the 
+same partition of the nodes of the graph.
+\begin{definition}[Agreement] \label{def:agreement}
+	Let \(Z^\star\) and \(\hat Z\) be, respectively, the true and an 
+	arbitrary vector of community assignments. Let also \(S_k\) denote the 
+	group of permutations of \([k]\). Define the \textit{agreement} between 
+	\(Z^\star\) and \(\hat Z\) to be
+	\begin{equation} \label{eq:def-agreement}
+		\mathcal A(Z^\star, \hat Z) \coloneqq 
+		\frac{1}{n} \max_{\sigma \in S_k} 
+		\sum_{i=1}^n \mathbf{1}(Z^\star_i = \sigma(\hat Z_i)).
+	\end{equation}
+\end{definition}
+
+When studying weaker forms of recovery, under general (asymmetric) SBMs, a 
+\textit{normalized} version of this metric is actually needed.
+\begin{definition}[Normalized agreement] \label{def:normalized-agreement}
+	Let \(Z^\star\) and \(\hat Z\) be, respectively, the true and an 
+	arbitrary vector of community assignments. Let also \(S_k\) denote the 
+	group of permutations of \([k]\). Define the \textit{normalized agreement} 
+	between \(Z^\star\) and \(\hat Z\) to be
+	\begin{equation} \label{eq:def-normalized-agreement}
+		\tilde{\mathcal{A}} (Z^\star, \hat Z) 
+		\coloneqq 
+		\frac{1}{k} \max_{\sigma \in S_k} 
+		\sum_{k=1}^K \frac{\sum_{i=1}^n \mathbf{1}(Z^\star_i = \sigma( 
+			\hat Z_i)) \mathbf{1} (Z^\star_i = k)}{\sum_{i=1}^n 
+			\mathbf{1} (Z^\star_i = k)}.
+	\end{equation}
+\end{definition}
+
+\subsection{Degrees of recovery}
+Definition \ref{def:agreement} can be used to measure different degrees of 
+performance of algorithms whose task is to estimate the communities 
+\(Z^\star\). The degree to which an algorithm is capable of recovering the 
+communities is captured in what are called the different (asymptotic) 
+\textit{degrees of recovery}. Notice these are all defined asymptotically. For a 
+review of asymptotic notation, see Section \ref{app:asymptotic-notation}.
+\begin{definition}[Degrees of recovery]
+	Let \((Z^\star, G) \sim\) \SBM{n}{\pi^\star}{\Gamma^\star}, and \(\hat Z\) 
+	be the 
+	output of an algorithm taking \((G, \pi^\star, \Gamma^\star)\) as input. 
+	Then, the following \textit{degrees of recovery} are said to be 
+	\textit{solved} if, asymptotically on \(n\), one has
+	\begin{itemize}
+		\item Exact recovery \(\leftrightarrow\) 
+		\(\mathbb P (\mathcal{A}(Z^\star, \hat 
+		Z) = 1) = 1 - o(1)\),
+		\item Almost exact recovery 
+		\(\leftrightarrow\) \(\mathbb P 
+		(\mathcal{A}(Z^\star, 
+		\hat Z) = 1 - o(1)) = 1 - o(1)\), 
+		\item Partial recovery \(\leftrightarrow\) \(\mathbb P 
+		(\tilde{\mathcal{A}}(Z^\star, \hat 
+		Z) \geq \alpha) = 1 - o(1), \alpha \in (1/k, 1)\),
+		\item Weak recovery (also called \textit{detection}) \(\leftrightarrow\) 
+		\(\mathbb P (\tilde{\mathcal{A}} (Z^\star, 
+		\hat 
+		Z) \geq 1/k + \Omega(1)) = 1 - o(1)\).
+	\end{itemize}
+\end{definition}
+
+\begin{remark}
+	There is an intuition for why \(\alpha > 1/k\) in the definitions of 
+	partial and weak recovery above. If one assumes knowledge of the true 
+	parameters \((\pi^\star, \Gamma^\star)\) of the model when designing an 
+	estimation algorithm, then the trivial algorithm of simply assigning each 
+	node a random community according to \(\pi^\star\) will achieve an 
+	agreement of \(\Vert \pi \Vert_2^2\), by the law of large numbers. In 
+	particular, in the case where the communities are uniform, \(\pi = 
+	\mathbf{1}_k / k\) and the trivial agreement reached will be \(\mathcal A = 
+	1/k\).
+\end{remark}
+
+\end{document}

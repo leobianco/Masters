@@ -1,0 +1,38 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{./images/}}}
+
+\begin{document}
+
+\section{Sketch of proof of Lemma \ref{lemma:retrieval-expectation}}
+\label{appendix:sketch-lemma-retrieval}
+Here is an outline of the steps taken in the proof.
+\begin{enumerate}
+	\item Factor \(\mathscr L\) as \(\mathscr L = Z \Gamma_L Z^t\) for 
+	some matrix \(\Gamma_L \in \mathbb R^{k \times k}\) that can explicitly be 
+	found.
+	\item Consider now the (different) matrix \((Z^t Z)^{1/2} \Gamma_L 
+	(Z^t Z)^{1/2}\). It is the decomposition given for \(\mathscr L\) under 
+	the change \(Z \to (Z^t Z)^{1/2}\), which can be thought of as a ``square 
+	matrix version'' of \(Z\).
+	\item Show that \((Z^t Z)^{1/2} \Gamma_L (Z^t Z)^{1/2}\) is symmetric and 
+	positive-definite, implying the spectral decomposition 
+	\((Z^t Z)^{1/2} \Gamma_L (Z^t Z)^{1/2} = V \Lambda V^t\).
+	\item Multiply the spectral decomposition on both sides by \((Z^t Z)^{-1/2} 
+	Z^t\), revealing that
+	\begin{equation} \label{eq:proof-rohe}
+		Z \Gamma_L Z^t = \mathscr L = (Z \mu) \Lambda (Z \mu)^t
+	\end{equation}
+	for \(\mu \coloneqq (Z^t Z)^{-1/2} V\).
+	\item Together with the fact that \((Z \mu)^t (Z \mu) = I_k\), where \(I_k\) is 
+	the \(k \times k\) identity, Equation \ref{eq:proof-rohe} is precisely the 
+	eigenvector equation for \(\mathscr L\). This shows that the columns of \(Z 
+	\mu\) are the eigenvectors of \(\mathscr L\) associated to the non-zero 
+	eigenvalues.
+	\item Finally, the equivalence is a direct consequence of the fact 
+	that \(\mu\) is invertible:
+	\begin{equation*}
+		\det(\mu) = \det((Z^t Z)^{-1/2}) \det(V) > 0.
+	\end{equation*} 
+\end{enumerate}
+
+\end{document}

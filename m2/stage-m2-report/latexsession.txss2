@@ -1,0 +1,31 @@
+{
+    "InternalPDFViewer": {
+        "Embedded": true,
+        "File": "main.pdf"
+    },
+    "Session": {
+        "Bookmarks": [
+        ],
+        "CurrentFile": "sections/section1/section1.tex",
+        "FileVersion": 1,
+        "Files": [
+            {
+                "Col": 0,
+                "EditorGroup": 0,
+                "FileName": "main.tex",
+                "FirstLine": 0,
+                "FoldedLines": "",
+                "Line": 0
+            },
+            {
+                "Col": 28,
+                "EditorGroup": 0,
+                "FileName": "sections/section1/section1.tex",
+                "FirstLine": 52,
+                "FoldedLines": "",
+                "Line": 69
+            }
+        ],
+        "MasterFile": ""
+    }
+}

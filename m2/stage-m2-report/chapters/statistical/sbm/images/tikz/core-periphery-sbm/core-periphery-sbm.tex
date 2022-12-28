@@ -1,0 +1,48 @@
+\documentclass{standalone}
+\usepackage{tikz-network}
+\begin{document}
+	\begin{tikzpicture}
+		\clip (0,0) rectangle (20.0,20.0);
+		\Vertex[x=14.775,y=10.000,size=0.8,color={31.0,119.0,180.0},opacity=0.7,RGB]{0}
+		\Vertex[x=13.376,y=13.376,size=0.8,color={31.0,119.0,180.0},opacity=0.7,RGB]{1}
+		\Vertex[x=19.550,y=10.000,size=0.8,color={255.0,127.0,14.0},opacity=0.7,RGB]{2}
+		\Vertex[x=10.000,y=14.775,size=0.8,color={31.0,119.0,180.0},opacity=0.7,RGB]{3}
+		\Vertex[x=14.775,y=18.271,size=0.8,color={255.0,127.0,14.0},opacity=0.7,RGB]{4}
+		\Vertex[x=10.000,y=10.000,size=0.8,color={44.0,160.0,44.0},opacity=0.7,RGB]{5}
+		\Vertex[x=5.225,y=18.271,size=0.8,color={255.0,127.0,14.0},opacity=0.7,RGB]{6}
+		\Vertex[x=6.624,y=13.376,size=0.8,color={31.0,119.0,180.0},opacity=0.7,RGB]{7}
+		\Vertex[x=0.450,y=10.000,size=0.8,color={255.0,127.0,14.0},opacity=0.7,RGB]{8}
+		\Vertex[x=5.225,y=1.729,size=0.8,color={255.0,127.0,14.0},opacity=0.7,RGB]{9}
+		\Vertex[x=5.225,y=10.000,size=0.8,color={31.0,119.0,180.0},opacity=0.7,RGB]{10}
+		\Vertex[x=6.624,y=6.624,size=0.8,color={31.0,119.0,180.0},opacity=0.7,RGB]{11}
+		\Vertex[x=14.775,y=1.729,size=0.8,color={255.0,127.0,14.0},opacity=0.7,RGB]{12}
+		\Vertex[x=10.000,y=5.225,size=0.8,color={31.0,119.0,180.0},opacity=0.7,RGB]{13}
+		\Vertex[x=13.376,y=6.624,size=0.8,color={31.0,119.0,180.0},opacity=0.7,RGB]{14}
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](0)(4)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](0)(5)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](0)(9)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](1)(2)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](1)(5)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](1)(12)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](2)(7)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](2)(11)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](3)(4)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](3)(5)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](3)(9)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](3)(12)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](4)(10)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](4)(14)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](5)(7)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](5)(10)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](5)(11)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](5)(13)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](5)(14)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](6)(7)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](6)(14)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](7)(8)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](7)(9)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](8)(14)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](9)(13)
+		\Edge[,lw=1.2,color={211,101,130},bend=0,RGB](9)(14)
+	\end{tikzpicture}
+\end{document}

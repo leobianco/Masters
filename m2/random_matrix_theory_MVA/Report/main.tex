@@ -1,0 +1,65 @@
+\documentclass[11pt]{article}
+
+
+% Graphics
+\usepackage{graphicx}
+\graphicspath{\subfix{./images/}}
+\usepackage{tikz}
+\usetikzlibrary{mindmap, trees}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% Mathematics and code
+\usepackage{amssymb,amsthm,amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{bbm}
+
+\newtheorem{theorem}{Theorem}  % Use options to name theorems
+
+% Fonts, symbols, languages
+\usepackage[utf8]{inputenc}
+\usepackage{ebgaramond}  % ebgaramond, palatino, fourier
+\usepackage{enumerate}  % Custom numbered items, such as steps 1, 2, etc.
+% \setlength{\parindent}{0pt}  % If you do not want paragraph indentation.
+\usepackage[francais]{babel}
+
+% References and links
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan
+    }
+\usepackage{url}
+
+% Subfile (last)
+\usepackage{subfiles}
+
+% Custom commands
+\input{commands.tex}
+
+
+\title{Théorie des Matrices Aléatoires \\ Détection de Communautés dans les Graphes}
+\author{Bianca Marin Moreno \& Leonardo Martins Bianco}
+\date{Mars 2022}  % Omits date
+
+
+\begin{document}
+
+% Title page, abstract, ToC
+\maketitle
+
+% Sections
+\subfile{sections/obs_prelim/obs_prelim}
+\subfile{sections/cas_homogene/cas_homogene}
+\subfile{sections/cas_heterogene/cas_heterogene}
+
+% Bibliography
+\clearpage  % Separate page for bibliography
+\nocite{*}  % Cites all entries in references.bib
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

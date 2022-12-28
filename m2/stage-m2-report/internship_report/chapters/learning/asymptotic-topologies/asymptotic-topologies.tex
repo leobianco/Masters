@@ -1,0 +1,125 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{./images/}}}
+
+\begin{document}
+
+\section{Asymptotic topologies}  % 📝
+\label{sec:asymptotic-topologies}
+This section details one factor that might impact algorithms' performance in the 
+context of the analysis performed in this chapter: the asymptotic structure of 
+the graphs to which they are applied to. First, it is explained how these 
+structures appear in models relevant for this report. Then, it is explained how 
+this impacts the robustness of algorithms.
+
+\subsection{The case of the Erd\H{o}s-Rényi model}
+The first random graph model was the Erd\H{o}s-Rényi model, denoted \(G(n, 
+p)\), over graphs with \(n\) vertices \cite{erdos59a}. Under this model, the 
+presence of an edge between each pair of nodes is determined by a Bernoulli 
+random variable of parameter \(p\). See Figure \ref{fig:obs-erdos-renyi}. 
+\begin{figure}[h]
+	\centering
+	\ifthenelse{\boolean{addtikz}}{
+		\subfile{./images/tikz/erdos-renyi/erdos-renyi.tex}
+	}{
+		\includegraphics{example-image-a}
+	}
+	\caption{An observation from an Erd\H{o}s-Rényi model \(G(30, 0.2)\)}
+	\label{fig:obs-erdos-renyi}
+\end{figure}
+
+Although this model does not present clusters of nodes, it is nevertheless of 
+great interest, since it reveals a key phenomenon: there exist tightly defined 
+and distinct \textit{asymptotic topologies} for random graphs arising from this 
+model as \(n \to \infty\). Which one arises is a function of the growth of 
+\(p\) with respect to \(n\).
+
+\begin{theorem}
+	% ----------------------
+	% pName: CYCLE
+	
+	% ----------------------
+	% pName: GIANT COMPONENT
+	
+	% ----------------------
+	% pName: CONNECTIVITY
+	
+	% ----------------------
+\end{theorem}
+
+\begin{figure}
+	\centering
+	\begin{subfigure}{.55\textwidth}
+		\centering
+		\ifthenelse{\boolean{addtikz}}{
+			\resizebox{!}{\linewidth}{
+				\subfile{./images/tikz/er-giant-0/er-giant-0.tex}
+			}
+		}{
+			\includegraphics[width=\linewidth]{example-image-a}
+		}
+		\caption{}
+		\label{fig:er-giant-0}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{.55\textwidth}
+		\centering
+		\ifthenelse{\boolean{addtikz}}{
+			\resizebox{!}{\linewidth}{
+				\subfile{./images/tikz/er-giant-1/er-giant-1.tex}
+			}
+		}{
+			\includegraphics[width=\linewidth]{example-image-a}
+		}	
+		\caption{}
+		\label{fig:er-giant-1}
+	\end{subfigure}
+	\caption{(a) At \(np = 0.8 < 1\), there are some small trees of size at 
+		most \(O(\log(n))\). (b) At \(np = 1.33 > 1\) a giant component 
+		appears, of 
+		size \(O(n^{2/3})\).}
+	\label{fig:test1}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\ifthenelse{\boolean{addtikz}}{
+		\resizebox{!}{.55\textwidth}{
+			\subfile{./images/tikz/er-connectivity-0/er-connectivity-0.tex
+			}
+		}
+	}{
+		\includegraphics[width=\linewidth]{example-image-c}
+	}
+	\caption{At \(p = 0.011 < 0.012\) there exists almost surely an 
+		isolated vertex, and the graph is disconnected. When \(p = 0.013 > 
+		0.012\), isolated vertices disappear almost surely, and the graph 
+		finally becomes connected.}
+	\label{fig:er-connectivity-0}
+\end{figure}
+
+\subsection{The case of the SBM}  % ⭕️
+In the SBM, essentially the same phenomenon happens.
+\begin{proposition}
+	Content.
+\end{proposition}
+
+\subsection{Why does this matter?}  % ⭕️
+% ----------------------
+% pName: EXPLAINING THE INTEREST FOR COMMUNITY DETECTION
+% 1. Connect with previous paragraph
+This phenomenon is of interest for community detection, because the analysis 
+of algorithms takes place asymptotically. Knowing what structures appear can 
+provide an intuition to the common hypotheses appearing on consistency 
+results regarding the asymptotic regime of the expected degree. It can also 
+reveal weaknesses of some methods that rely too heavily on these structures, 
+implying a lack of robustness to perturbations.
+% 3. Give up to three details
+% 4. Brief lead (connector) for next paragraph
+
+% ----------------------
+
+, and this affects directly 
+the performance of algorithms, and has led to ideas of how to increase their 
+robustness.
+
+\end{document}

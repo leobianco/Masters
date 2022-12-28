@@ -1,0 +1,1004 @@
+---
+title: "Estimation d'une taille de population à partir de données de capture-marquage-recapture"
+author: "Guillaume - Leonardo"
+date: "21/05/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+library(latex2exp)
+library(coda)
+library(rjags)
+library(ggmcmc)
+```
+
+## Introduction
+
+Dans ce projet, on étudie les méthodes de capture-marquage-recapture à travers plusieurs hypothèses et 2 approches : approche fréquentiste et approche bayésienne. Ces méthodes ont pour but d'évaluer le nombre d'individus d'une population, noté $N$, à travers un échantillonage non destructif. La probabilité de capture d'un individu est notée $\pi$ et est appelée efficacité. Elle dépend de beaucoup de paramètres relatifs au contexte de l'expérience. Dans notre projet, on se place dans un contexte de pêche d'un poisson d'intérêt.
+
+Dans une première partie, on définit le modèle probabiliste, noté $\mathcal{M}$, que l'on va utiliser et on calcule sa log-vraisemblance. On va également créer une fonction pour générer un échantillon de ce modèle à l'aide de la méthode d'inverse générique. Dans la deuxième partie, on suppose $N$ connu et on cherche à estimer $\pi$. Pour ce faire, on va s'intéresser à l'estimateur du maximum de vraisemblance du modèle $\mathcal{M}$ et à la construction d'une loi a posteriori. Dans la troisième partie, on cherche à estimer $N$ sans que $\pi$ soit connu. On utilisera une approche fréquentiste à travers l'estimateur de Petersen, puis une approche bayésienne, avec l'utilisation d'un algorithme MCMC.
+
+## Pour commencer...
+
+Introduisons des notations :
+
+* $N$ le nombre de poissons dans le lac.
+
+* $\pi$ l'efficacité, c'est-à-dire la probabilité de pêcher un poisson d'intérêt.
+
+* $C_1$ et $C_2$ le nombre total de poissons capturés et marqués lors des pêches 1 et 2 respectivement.
+
+* $C_{20}$ le nombre de poissons non marqués capturés lors de la deuxième pêche et $C_{21}$ le nombre de poissons marqués capturés lors de la deuxième pêche. On a donc : $C_2 = C_{20} + C_{21}$.
+
+Les données observées sont $C_1 = 250$, $C_{20} = 134$ et $C_{21} = 21$ (donc $C_2 = 134 + 21 = 155$).
+
+On considère le modèle probabiliste $\mathcal{M}$ suivant :
+
+$$
+C_1 \sim Binomial(N,\pi) \\
+C_{20}|C_1 \sim Binomial(N-C_1,\pi) \\
+C_{21}|C_1 \sim Binomial(C_1,\pi)
+$$
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 1 : ** Montrer que la log-vraisemblance du modèle probabiliste $\mathcal{M}$ s'écrit :
+
+$$
+\log([C_1 = c_1, C_{20} = c_{20}, C_{21} = c_{21} | \pi, N]) = \log(C_N^{c_1}C_{n-c_1}^{c_{20}}C_{c_1}^{c_{21}}) + (c_1 + c_2)\log(\pi) + (2N - c_1 - c_2)\log(1 - \pi)
+$$
+</div>
+
+$$\\[0.1cm]$$
+
+**Remarque préliminaire :** On met de côté les cas pathologiques $\pi = 0$ et $\pi = 1$ pour pouvoir calculer la log-vraisemblance de $\mathcal{M}$. De plus, ces cas ne sont pas intéressants à étudier (aucune chance de pêcher un poisson 'intérêt et aucune chance de ne pas en pêcher un).
+
+La vraisemblance du modèle probabiliste $\mathcal{M}$ est : $[C_1 = c_1, C_{20} = c_{20}, C_{21} = c_{21} | \pi, N]$. 
+
+$C_{20}|C_1$ et $C_{21}|C_1$ sont conditionnellement dépendantes de $C_1$ par construction. Donc, par densité jointe de variables conditionnellement dépendantes, on a 
+
+$$[C_1 = c_1, C_{20} = c_{20}, C_{21} = c_{21} | \pi, N] = [C_1 = c_1| \pi, N] \cdot [C_{20} = c_{20}, C_{21} = c_{21} | C_1 = c_1, \pi, N]$$
+
+Comme $C_{20}|C_1$ et $C_{21}|C_1$ sont indépendantes, on a 
+
+$$[C_1 = c_1, C_{20} = c_{20}, C_{21} = c_{21} | \pi, N] = [C_1 = c_1| \pi, N] \cdot [C_{20} = c_{20} | C_1 = c_1, \pi, N] \cdot [C_{21} = c_{21} | C_1 = c_1, \pi, N]$$
+
+La densité d'une loi binomiale $X \sim Binomial(n,p)$ est $[X=k] = C_n^k p^k (1-p)^{n-k}$. Donc 
+
+\begin{align}
+& [C_1 = c_1| \pi, N] \cdot [C_{20} = c_{20} | C_1 = c_1, \pi, N] \cdot [C_{21} = c_{21} | C_1 = c_1, \pi, N] \\ 
+& = C_N^{c_1} \pi^{c_1} (1-\pi)^{N-c_1} \cdot C_{N-c_1}^{c_{20}} \pi^{c_{20}} (1-\pi)^{N-c_1-c_{20}} \cdot C_{c_1}^{c_{21}} \pi^{c_{21}} (1-\pi)^{c_1-c_{21}} \\
+& = C_N^{c_1} C_{N-c_1}^{c_{20}} C_{c_1}^{c_{21}} \cdot \pi^{c_1 + c_{20} + c_{21}} \cdot (1-\pi)^{2N - c_1 - c_{20} - c_{21}} \\
+& = C_N^{c_1} C_{N-c_1}^{c_{20}} C_{c_1}^{c_{21}} \cdot \pi^{c_1 + c_{2}} \cdot (1-\pi)^{2N - c_1 - c_{2}} ~~ \text{ car } c_2 = c_{20} + c_{21}
+\end{align}
+
+Finalement, comme $\log(a \cdot b) = \log(a) + \log(b)$ et $\log(a^b) = b\cdot \log(a)$, la log-vraisemblance du modèle probabiliste $\mathcal{M}$ est bien 
+
+$$
+\log([C_1 = c_1, C_{20} = c_{20}, C_{21} = c_{21} | \pi, N]) = \log(C_N^{c_1}C_{N-c_1}^{c_{20}}C_{c_1}^{c_{21}}) + (c_1 + c_2)\log(\pi) + (2N - c_1 - c_2)\log(1 - \pi)
+$$
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 2 : ** Pour tout $u \in [0,1]$, écrire l’expression de l’inverse généralisée de la fonction de répartition de la variable aléatoire $C_1$ de loi $Binomial(N,\pi)$. En déduire une fonction R qui génère par inversion générique en tirages indépendants de la variable aléatoire $C_1$. Utiliser cette fonction pour tirer un échantillon de $n = 10000$ réalisations de loi $Binomial(125,0.15)$. Comparer les fréquences obtenues avec les fréquences théoriques.
+</div>
+
+$$\\[0.1cm]$$
+
+Soit $X$ une variable aléatoire de fonction de répartition $F$. L'inverse généralisée $F^{-1}$ est 
+
+$$
+F^{-1}(u) = \inf\{ x \in \mathbb{R} ; u \leq F(x) \} \quad \text{ pour } u \in [0,1]
+$$
+
+Comme $C_1 \sim Binomial(N,\pi)$, sa fonction de répartition est
+
+$$
+F(x)={\mathbb  P}(X\leq x)={\begin{cases}1&si\;x\geq n\\\displaystyle \sum _{{k=0}}^{{\lfloor x\rfloor }}{n \choose k}p^{k}(1-p)^{{n-k}}&si\;0\leq x<n\\0&si\;x<0\end{cases}}
+$$
+
+Il n'y a pas de formule exacte pour trouver l'inverse généralisée $F^{-1}$.  On utilise donc une méthode incrémentale qui se base sur la croissance de $F$ et sur le fait que $F$ est constante sur $[\lfloor x\rfloor , \lfloor x\rfloor + 1[$. On trouve $x$ en calculant pour $x=0,1,2,...$ croissant jusqu'à ce qu'on trouve le premier $x$ qui satisfait $u \leq F(x)$.
+
+On utilise maintenant la méthode d'inversion de la fonction de répartition pour créer une fonction génératrice de la variable $C_1 \sim Binomial(N,\pi)$. On crée une fonction $\verb!notre.dbinom(k, prob, N)!$, densité de $Binomial(N, \verb!prob!)$ évaluée en $\verb!k!$. On l'utilise dans le calcul de $F^{-1}$.
+
+```{r fonctions1}
+#densité de la loi binomiale(N,prob) évaluée en k
+notre.dbinom <- function(k, prob, N){
+  return(choose(N, k)*(prob^k)*((1 - prob)^(N-k)))
+}
+
+#inverse généralisée de la fonction de répartition de la loi binomiale(N,prob)
+notre.qbinom <- function(u, N, prob){
+  densites <- sapply(c(0:N), FUN = notre.dbinom, prob, N)
+  sommes <- sapply(c(1:N+1), function(x) {sum(densites[1:x])})
+  return(min(which(u <= sommes, arr.ind = T)))
+}
+```
+
+Pour vérifier et étudier notre code, on génère un échantillon de $n=10000$ réalisations de loi $Binomial(125,0.15)$. Pour ce faire, on crée la fonction $\verb!notre.rbinom(n,N,prob)!$ qui génère $n$ réalisation de la loi $Binomial(\verb!N!,\verb!prob!)$. C'est l'équivalent de la fonction $\verb!rbinom!$ de R. On compare les fréquences obtenues avec les fréquences théoriques en représentant l'histogramme de nos observations obtenues avec la densité théorique codée dans R.
+
+```{r comparaison}
+#fonction générant un échantillon n de la loi binomiale(N,prob)
+notre.rbinom <- function(n, N, prob){
+  U = runif(n)
+  return(sapply(U, FUN = notre.qbinom, N = N, prob = prob))
+}
+
+#simulation d'un n-échantillon de la loi binomiale(125,0.15)
+val_obtenues <- notre.rbinom(10000, 125, 0.15)
+
+#densité théorique de la loi binomiale(125,0.15) sur les valeurs prises parmi
+#les n = 10000 réalisations précédentes
+xfit<-seq(min(val_obtenues),max(val_obtenues))
+yfit<-dbinom(size = 125,prob = 0.15, x = xfit)
+
+#représentation de l'histogramme des n = 10000 réalisations obtenus et 
+#superposition de la densité théorique
+hist(val_obtenues, freq = F,ylim=c(0,max(yfit)),main = "Hisotogramme des réalisations obtenues et densité théorique",ylab="Densité",xlab="")
+lines(xfit,yfit,col='red')
+```
+
+On remarque que la densité se superpose parfaitement avec l'histogramme des $n=10000$ réalisations. On considère donc que le code est vérifié et que la méthode d'inversion nous permet de générer des tirages indépendants de la loi $Binomial(N,\pi)$.
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 3 : ** Utiliser la fonction R précédente pour définir une seconde fonction R permettant de générer des réalisations possibles de capture-marquage-recapture (i.e. des variables aléatoires $C_1$, $C_{20}$ et $C_{21}$) selon le modèle $\mathcal{M}$.
+</div>
+
+$$\\[0.1cm]$$
+
+Grâce à la fonction $\verb!notre.rbinom!$ (où $n=1$), on peut simuler une réalisation de $C_1$. Or, $C_{20}|C_1$ et $C_{21}|C_1$ sont dépendantes conditionnement à $C_1$, donc on peut les simuler grâce à la réalisation de $C_1$. On code la fonction $\verb!realisations!$ qui génère une réalisation du modèle $\mathcal{M}$.
+
+```{r fonction realisations}
+#fonction générant une réalisation du modèle M
+realisations <- function(N, prob){
+  C1 <- notre.rbinom(n = 1, N = N, prob = prob)
+  C20 <- notre.rbinom(n = 1, N = N - C1, prob = prob)
+  C21 <- notre.rbinom(n = 1, N = C1, prob = prob)
+  return(c(C1, C20, C21))
+}
+```
+
+## Supposons N connu
+
+Supposons tout d’abord $N=950$ (connu) et estimons l’efficacité $\pi$.
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 4 : ** Calculer l’estimateur du maximum de vraisemblance $\hat{\pi}_{MLE}$ du paramètre $\pi$. Sachant les données observées, en déduire une estimation de $\pi$.
+</div>
+
+$$\\[0.1cm]$$
+
+Reprenons la log-vraisemblance du modèle $\mathcal{M}$ de la question 1 : 
+
+$$
+\log([C_1 = c_1, C_{20} = c_{20}, C_{21} = c_{21} | \pi, N]) = \log(C_N^{c_1}C_{N-c_1}^{c_{20}}C_{c_1}^{c_{21}}) + (c_1 + c_2)\log(\pi) + (2N - c_1 - c_2)\log(1 - \pi)
+$$
+
+Etant donné que $N$ est connu, c'est une fonction de $\pi$. On la note $\mathcal{\log L}$ où $\mathcal{L}$ est la vraisemblance.
+
+$$
+\log \mathcal{L} (\pi) = \log(C_N^{c_1}C_{N-c_1}^{c_{20}}C_{c_1}^{c_{21}}) + (c_1 + c_2)\log(\pi) + (2N - c_1 - c_2)\log(1 - \pi)
+$$
+
+On cherche $\hat{\pi}_{MLE}$ maximisant la log-vraisemblance $\log \mathcal{L}$. Calculons la dérivée :
+
+\begin{align}
+\frac{\partial \log \mathcal{L}(\pi)}{\partial \pi} & = \frac{c_1 + c_2}{\pi} - \frac{2N - c_1 - c_2}{1-\pi} \\ 
+& = \frac{c_1 - \pi c_1 + c_2 - \pi c_2 - 2 \pi N + \pi c_1 + \pi c_2}{\pi (1-\pi)} \\
+& = \frac{c_1 + c_2 - 2 \pi N}{\pi (1-\pi)}
+\end{align}
+
+On a 
+
+$$
+\frac{\partial \log \mathcal{L}(\pi)}{\partial \pi} = 0 \Longleftrightarrow \pi = \frac{1}{N} \left( \frac{c_1 + c_2}{2} \right)
+$$
+
+On prend donc $\frac{1}{N} \left( \frac{c_1 + c_2}{2} \right)$ le candidat de $\hat{\pi}_{MLE}$.
+
+Vérifions que c'est bien un maximum de $\log \mathcal{L}$. On calcule sa dérivée seconde :
+
+$$
+\frac{\partial^2 \log \mathcal{L}(\pi)}{\partial \pi^2} = - \frac{c_1 + c_2}{\pi^2} - \frac{2N - c_1 - c_2}{(1 - \pi)^2}
+$$
+
+On fait une disjonction de cas selon les valeurs de $c_1$ :
+
+* Si $c_1 = 0$, alors $c_2 = 0$, $- \frac{c_1 + c_2}{\pi^2} = 0$ et $- \frac{2N - c_1 - c_2}{(1 - \pi)^2} < 0$. Donc $\frac{\partial^2 \log \mathcal{L}(\pi)}{\partial \pi^2} < 0$.
+* Si $c_1 = N$, alors $c_2 \leq N$, $- \frac{c_1 + c_2}{\pi^2} < 0$ et $- \frac{2N - c_1 - c_2}{(1 - \pi)^2} \leq 0$. Donc $\frac{\partial^2 \log \mathcal{L}(\pi)}{\partial \pi^2} < 0$.
+* Si $c_1 \in ~ ]0 , N[$, alors $c_2 < N$, $- \frac{c_1 + c_2}{\pi^2} < 0$ et $- \frac{2N - c_1 - c_2}{(1 - \pi)^2} < 0$. Donc $\frac{\partial^2 \log \mathcal{L}(\pi)}{\partial \pi^2} < 0$.
+
+Dans tous les cas, $\frac{\partial^2 \log \mathcal{L}(\pi)}{\partial \pi^2} < 0$. Finalement, $\hat{\pi}_{MLE}$ est bien un maximum de $\log \mathcal{L}$, donc de $\mathcal{L}$. C'est l'estimateur du maximum de vraisemblance du paramètre $\pi$.
+
+Sachant les données observées $N = 950$, $C_1 = 125$, $C_{20} = 134$ et $C_{21} = 21$, on déduit l'estimation de $\pi$ suivante :
+
+$$
+\hat{\pi}_{MLE} = \frac{1}{950} \left( \frac{125 + 155}{2} \right) = 0.1473684
+$$
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 5 : ** Assignons une loi a priori $beta(\alpha,\beta)$ sur le paramètre $\pi$. Montrer que la loi a posteriori de $\pi$ sachant $N$ notée $[\pi|N,C_1,C_{20},C_{21}]$ est alors une loi beta de paramètres $C_1+C_2+\alpha$ et $2N - C_1 - C_2+\beta$. Donner l’expression de l’espérance de cette loi beta. Que remarquez-vous ?
+</div>
+
+$$\\[0.1cm]$$
+
+On choisit d'attribuer une loi a priori $beta(\alpha,\beta)$ sur le paramètre $\pi$. Le choix de cette loi est motivé par son support sur $[0,1]$ (i.e. les valeurs possibles de $\pi$) et sa grande variété de formes possibles. Cette loi a priori définit une distribution des valeurs "plausibles" de $\pi$ avant considération de nos données $N, C_1, C_{20}, C_{21}$. On ajoute l'information de nos données en calculant la loi a posteriori de $\pi$ sachant $N, C_1, C_{20}, C_{21}$, i.e. $[\pi | N, C_1, C_{20}, C_{21}]$. Elle est donnée par le théorème de Bayes :
+
+$$
+[\pi | N, C_1, C_{20}, C_{21}] \propto \mathcal{L} (N,C_1,C_{20},C_{21}|\pi) \cdot [\pi]
+$$
+Or on a
+
+$$
+\mathcal{L} (N,C_1 = c_1,C_{20} = c_{20},C_{21} = c_{21}|\pi) = C_N^{c_1} C_{N-c_1}^{c_{20}} C_{c_1}^{c_{21}} \cdot \pi^{c_1+c_2} \cdot (1-\pi)^{2N-c_1-c_2}
+$$
+
+et
+
+$$
+[\pi] = K \cdot \pi^{\alpha - 1} \cdot (1-\pi)^{\beta - 1}
+$$
+
+où $K$ est une constante de normalisation qui ne dépend pas de $\pi$. Donc
+
+$$
+\mathcal{L} (N,C_1 = c_1,C_{20} = c_{20},C_{21} = c_{21}|\pi) \cdot [\pi] = \underbrace{K \cdot C_N^{c_1} C_{N-c_1}^{c_{20}} C_{c_1}^{c_{21}}}_{=\tilde{K}} \cdot \pi^{c_1+c_2+\alpha-1} \cdot (1-\pi)^{2N-c_1-c_2+\beta-1}
+$$
+
+où $\tilde{K}$ est une constante indépendante de $\pi$. On en déduit que 
+
+$$\pi|N,C_1,C_{20},C_{21} \sim Beta(C_1+C_2+\alpha,2N-C_1-C_2+\beta)$$
+
+et son espérance est 
+
+$$
+\mathbb{E} [\pi | N,C_1,C_{20},C_{21}] = \frac{C_1 + C_2 + \alpha}{2N + \alpha + \beta}
+$$
+
+On remarque 2 choses :
+
+* Si $c_1 = c_2 = 0$, c'est-à-dire si on ne pêche aucun poisson d'intérêt lors des 2 captures, alors $\mathbb{E} [\pi | N,C_1,C_{20},C_{21}] = \frac{\alpha}{2N + \alpha + \beta} > 0$. Autrement dit, l'espérance de pêche est non nulle sachant que l'on a rien pêché lors des 2 tentatives.
+
+* Si $c_1 = c_2 = N$, c'est-à-dire si on pêche tous les poissons d'intérêt lors des 2 captures, alors $\mathbb{E} [\pi | N,C_1,C_{20},C_{21}] = \frac{2N + \alpha}{2N + \alpha + \beta} < 1$. Autrement dit, même si on pêche tous les poissons d'intérêt du lac les 2 fois, alors l'espérance de pêche n'est pas optimale (n'est pas égale à 1).
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 6 : ** Posons $\alpha=1$ et $\beta=3$. Représenter sur un même graphe les densités a priori et a posteriori de $\pi$ ainsi que l’estimateur du maximum de vraisemblance de $\hat{\pi}_{MLE}$. Commenter les résultats. 
+</div>
+
+$$\\[0.1cm]$$
+
+On pose $\alpha=1$ et $\beta=3$. On représente sur un même graphe les densités a priori et a posteriori de $\pi$ ainsi que l’estimateur du maximum de vraisemblance de $\hat{\pi}_{MLE}$ : 
+
+```{r representation}
+#paramètres de la loi beta(alpha,beta)
+alpha = 1
+beta = 3
+
+#nombre de poissons d'intérêt
+N = 950
+
+#nombre de poissons pêchés 
+c_1 = 125
+c_2 = 155
+
+#estimateur du maximum de vraisemblance
+hat_pi_MLE = (1/N)*((c_1+c_2)/2)
+
+#on récupère le max des bornes supérieures des supports des densités a priori et
+#a posteriori ainsi que l'estimateur du maximum de vraisemblance
+pi_max = max( qbeta(.999,alpha,beta), qbeta(.999,c_1+c_2+alpha,2*N-c_1-c_2+beta), hat_pi_MLE)
+
+#on crée le support
+ll = seq(0, pi_max, length.out=100)
+
+#on calcule les densités a priori et a posteriori sur le support
+a_priori = dbeta(ll,alpha,beta)
+a_posteriori = dbeta(ll,c_1+c_2+alpha,2*N-c_1-c_2+beta)
+
+#on défini la valeur maximale pour déterminer l'échelle du plot
+y_max = max(a_priori,a_posteriori)
+
+#on représente la densité a priori et a posteriori
+plot(ll, a_priori, col='red', type='l', ylim = c(0,y_max), ylab="densités", xlab="pi", main = "Représentation de l'estimateur du mximum de vraisemblance \n et des densités a priori et a posteriori", cex.main = 0.9) 
+lines(ll,a_posteriori, col='blue')
+
+#on ajoute l'estimateur du maximum de vraisemblance
+abline(v=hat_pi_MLE) 
+
+#on ajoute la légende
+legend("topright", legend=c("a priori", "a posteriori", TeX("$\\hat{\\pi}_{MLE}$")), bty='n', pch=rep('_',3), col=c(2,4,1))
+```
+
+La densité a priori est une fonction strictement convexe, légèrement décroissante, avec un support approximativement $[0,0.75]$. Elle favorise des valeurs faibles de $\pi$. On remarque que $\hat{\pi}_{MLE}$ appartient au support de la densité a priori, notamment il se situe dans la zone du support où la densité a priori possède ses plus grandes valeurs. C'est pourquoi la loi a posteriori semble faire une bonne synthèse de l'information donnée par la loi a priori et celle donnée par les données. En effet, on voit que la densité a posteriori est sous la forme d'une cloche centrée en $\hat{\pi}_{MLE}$ avec un support très petit de taille environ $0.1$. Autrement dit, la grande incertitude de la loi a priori de $\pi$ (grand support) est fortement réduite grâce à la connaissance des données : la loi a posteriori a un très petit support centré en $\hat{\pi}_{MLE}$. 
+
+On en conlut que si $N$ est connu, à l'aide du modèle de capture-marquage-recapture et de la loi a priori de $\pi$, on peut créer une loi a posteriori qui s'adapte très bien aux données et à la loi a priori $Beta(1,3)$ qui permet d'estimer l'efficacité $\pi$.
+
+## Supposons N et $\pi$ inconnus
+
+### Approche fréquentiste 
+
+Pour évaluer le nombre d’individus N dans une population d’intérêt à partir de deux expériences de pêche de type capture-marquage-recapture, un estimateur fréquentiste naïf est l’estimateur de "Petersen" défini par :
+
+$$
+\hat{N} = \frac{C_1 C_2}{C_{21}}
+$$
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 7 : ** Appliquer cet estimateur au jeu de données réelles observées afin d’estimer le nombre de "poissons" $N$ dans "le lac".
+</div>
+
+$$\\[0.1cm]$$
+
+Dans la construction de l'estimateur de Petersen, on suppose que la proportion de poissons marqués après la deuxième capture doit refléter la proportion de poissons marqués dans l'ensemble de la population, c'est-à-dire 
+
+$$
+\frac{C_1}{N} = \frac{C_{21}}{C_2}
+$$
+
+D'où l'estimateur de Petersen suivant :
+
+$$
+\hat{N} = \frac{C_1 C_2}{C_{21}}
+$$
+
+Avec les valeurs du jeu de données réelles observées, on a 
+
+$$
+\hat{N} = \frac{125 \times 155}{21} = 922.619
+$$
+L'estimateur de Petersen du nombre de "poissons" $N$ dans "le lac" est $\hat{N} = 922.619$.
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 8 : ** Supposons ici que les "vraies" valeurs des paramètres soient $N_{true} = 923$ et $\pi_{true}= 0.15$. Simuler 100 jeux de données à l’aide de la fonction implémentée à la question 3, en déduire 100 estimations du paramètre $N$ puis estimer empiriquement - par Monte-Carlo - le biais relatif de $\hat{N}$. Recommencer en faisant varier $N_{true}$ de 100 à 1000 par pas de 10 puis représenter l’évolution du biais relatif en fonction de $N_{true}$. Discuter des résultats.
+</div>
+
+$$\\[0.1cm]$$
+
+On fait l'hypothèse et le choix d'arrondir l'estimateur de Pertersen : on suppose que les "vraies" valeurs des paramètres sont $N_{true} = 923$ et $\pi_{true}= 0.15$, que l'on note $\verb!N_true!$ et $\verb!pi_true!$ dans le code.
+
+```{r def vraies valeurs}
+N_true <- 923
+pi_true <- 0.15
+```
+
+On veut étudier le biais de l'estimateur de Petersen $\hat{N}$ défini par $Biais(\hat{N}) = \mathbb{E}[\hat{N}] - N$. Calculer $\mathbb{E}[\hat{N}]$ est difficile donc on va l'estimer grâce à un estimateur de Monte-Carlo, noté $\hat{I}_n$. On définit d'abord $h(X) = \hat{N}$ où $X = (C_1,C_2,C_{21})$. On peut maintenant définir l'estimateur de Monte-Carlo $\hat{I}_n$ par 
+
+$$
+\hat{I}_n = \frac{1}{n} \sum_{i=1}^n h(X_i)
+$$
+
+où $\hat{X}_1$, ..., $\hat{X}_n$ sont indépendants et indentiquement distribués.
+
+On fixe $n=100$ et on simule 100 jeux de données à l'aide de la fonction $\verb!realisations!$ de la question 3 :
+
+```{r 100 simulations}
+#On simule 100 jeux de données
+n = 100
+cent_sim <- replicate(n = n, expr = realisations(N = N_true, prob = pi_true))
+```
+
+On en déduit 100 estimations du paramètre N et on calcule le biais relatif empirique de $\hat{N}$.
+
+```{r 100 estimations}
+#Fonction calculant l'estimateur de Petersen à partir d'une réalisation de M
+estPetersen <- function(c_1,c_2,c_21)
+{
+  return((c_1*c_2)/c_21)
+}
+
+#On calcule 100 estimations de N
+cent_est <-mapply(estPetersen,cent_sim[1,1:n],cent_sim[2,1:n]+cent_sim[3,1:n],cent_sim[3,1:n])
+
+#On calcule le biais relatif empirique
+mean(cent_est)-N_true
+```
+
+On observe une valeur de $36.98$ pour une certaine estimation. L'estimateur de Monte-Carlo $\hat{I}_n$ étant consistant, on considère que $36.98$ est une bonne approximation de biais relatif de $\hat{N}$ pour cette estimation. On remarque que $\hat{N}$ est biaisé pour $N_{true} = 923$.
+
+On peut procéder de même en prenant $n$ beaucoup plus grand afin d'avoir une convergence plus approfondie de l'estimateur de Monte-Carlo et donc une meilleure approximation du biais relatif de $\hat{N}$. Le risque est un temps d'exécution trop grand. Après plusieurs essais avec $n=100$, on remarque que le biais relatif de $\hat{N}$ varie (principalement entre 20 et 60) mais le plus important n'est pas de le quantifier précisément mais de constater qu'il est non nul. 
+
+Etant donné que l'on souhaite étudier le biais relatif de $\hat{N}$ pour $N_{true}$ quelconque, on va procéder de même en faisant varier $N_{true}$ de 100 à 1000 par pas de 10 puis représenter l'évolution du biais relatif en fonction de $N_{true}$. De plus, on représente $\hat{I}_n$ en fonction de $N_{true}$ avec la première bissectrice. Si $\hat{N}$ est sans biais, les points devraient s'étirer sur cette bissectrice. Ces 2 graphiques sont équivalents mais les visualisations sont différentes et intéressantes.
+
+```{r évolution du biais relatif}
+#fonction qui effectue 100 réalisations du modèle M où N = N_true à choisir
+# et pi = pi_true fixé
+cent_est_fun <- function(N_true_par)
+{
+  return(replicate(n = 100, expr = realisations(N = N_true_par, prob = pi_true)))
+}
+
+N_true_tab <- seq(100,1000,10) #tableaux des valeurs de N_true
+biais_tab <- rep(0,91) #tableau vide à remplir des biais calculés pour chaque valeur de N_true
+compteur <- 1 #compteur
+
+for(N_true_elt in N_true_tab)
+{
+  cent_sim <- replicate(n = 100, expr = realisations(N = N_true_elt, prob = pi_true))
+  cent_est <-mapply(estPetersen,cent_sim[1,1:100],cent_sim[2,1:100]+cent_sim[3,1:100],cent_sim[3,1:100])
+  biais_tab[compteur] <- mean(cent_est)
+  compteur <- compteur + 1
+}
+
+#Biais relatif de l'estimateur de Petersen en fonction de N_true calculé par Monte-Carlo
+plot(N_true_tab,biais_tab-N_true_tab,main="Biais relatif de l'estimateur de Petersen en fonction de N_true \n calculé par Monte-Carlo", xlab ="N_true", ylab="Biais relatif")
+```
+
+```{r }
+#Estimation de l'espérance de l'estimateur de Pertesen calculée par Monte-Carlo en fonction de N_true
+plot(N_true_tab,biais_tab,main="Estimation de l'espérance de l'estimateur de Pertesen calculée \n par Monte-Carlo en fonction de N_true",xlab="N_true",y_lab="Estimation de l'espérance")
+
+abline(a = 0, b=1) #première bissectrice
+```
+
+Tout d'abord, sur le second graphique, on remarque que l'estimateur $\hat{I}_n$ s'étire sur une droite. Cette droite semble parallèle à la première bissectrice avec une translation verticale positive. A première vue, on voit que le biais relatif calculé par Monte-Carlo n'est pas nul le long des valeurs de $N_{true}$ mais semble borné et positif. On retrouve le même résultat sur le premier graphique où le biais semble positif et borné le long des valeurs de $N_{true}$.
+
+On en conclut que l'estimateur de Petersen est biaisé. De plus, la plupart du temps, on trouve empiriquement $\mathbb{E}[\hat{N}] - N > 0$, c'est-à-dire que l'estimateur de Petersen semble sur-estimer la valeur de $N_{true}$.
+
+
+### Approche bayésienne 
+
+Considérons une loi a priori $beta(\alpha= 1,\beta= 3)$ pour $\pi$ et une loi uniforme sur l’ensemble fini d’entiers $\{1,...,2000\}$ pour $N$.
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 9 : ** La question 5. a montré que la loi conditionnelle complète de $\pi$ est : $\pi|N,y∼Beta(C_1+C_2+\alpha,2N-C_1-C_2+\beta)$. Donner l’expression de la loi conditionnelle complète de $N$ (à une constante multiplicative près). Reconnaissez-vous une forme analytique connue ?
+</div>
+
+$$\\[0.1cm]$$
+
+On commence par écrire la loi jointe des observations $C_1, C_{20}, C_{21}$ et des paramètres $N$ et $\pi$. On note $y = (C_1, C_{20}, C_{21})$. On utilise la $\verb!chain rule!$ :
+
+\begin{align}
+[\pi, N, y] & = [y | \pi, N] \cdot [\pi, N] \\
+& = [y | \pi, N] \cdot [N | \pi] \cdot [\pi] 
+\end{align}
+
+et comme $N \sim U(\{ 1,...,2000 \})$ ne dépend pas de $\pi$ (a priori), on a $[N | \pi] = [N]$. Finalement :
+
+$$
+[\pi, N, y] = [y | \pi, N] \cdot [N] \cdot [\pi] 
+$$
+
+Pour trouver la loi conditionnelle complète $[N | \pi, y]$ de $N$, il suffit d'isoler les termes indépendants de $N$ dans l'expression de $[\pi, N, y]$, car
+
+$$
+[N | \pi, y] = \frac{[N, \pi, y]}{[\pi, y]}
+$$
+et si l'on fixe $\pi$ et $y$ connues, le terme $1/[\pi, y]$ est une constante qui peut être intégrée à la constante de normalisation.
+On connait $[ \pi ]$ et $[y | \pi, N]$. De plus, $[N] = \frac{1}{2000} 1_{\{1,...,2000\}}(N)$, donc
+
+\begin{align}
+[\pi, N, y] & \propto C_N^{c_1}C_{N-c_1}^{c_{20}}C_{c_1}^{c_{21}} \cdot \pi^{c_1 + c_2} \cdot (1 - \pi)^{2N - c_1 - c_2} \cdot 1_{\{1,...,2000\}}(N) \cdot (1-\pi)^2 \\
+& \propto C_N^{c_1}C_{N-c_1}^{c_{20}}C_{c_1}^{c_{21}} \cdot \pi^{c_1 + c_2} \cdot (1 - \pi)^{2(N+1) - c_1 - c_2} \cdot 1_{\{1,...,2000\}}(N) \\
+& \propto C_N^{c_1}C_{N-c_1}^{c_{20}} \cdot \pi^{c_1 + c_2} \cdot (1 - \pi)^{2(N+1) - c_1 - c_2} \cdot 1_{\{1,...,2000\}}(N) \\
+& \propto \frac{N!}{(N-c_1)! c_1 !} \cdot \frac{(N-c_1)!}{(N-c_1 - c_{20})! c_{20} !} \cdot (1 - \pi)^{2(N+1) - c_1 - c_2} \cdot 1_{\{1,...,2000\}}(N) \\
+& \propto \frac{N!}{c_1 ! c_{20} ! (N- c_1 -c_{20})!} (1-\pi)^{2(N+1)-(c_1 + c_{20})} \pi^{c_1 + c_{20}} \cdot 1_{\{1,...,2000\}}(N)
+\end{align}
+
+On peut changer les quantités associées à $\pi$, $c_1$, $c_2$ comme on veut, en les intégrant à la constante de normalisation. Ainsi, on peut transformer
+$$
+\frac{N !}{c_{1} ! c_{20} !\left(N-c_{1}-c_{20}\right) !} \to {N \choose c_1 + c_{20}} \quad \text{en faisant} \quad \frac{1}{c_1!c_{20}!} \to \frac{1}{(c_1 + c_{20})!}
+$$
+$$
+(1-\pi)^{2(N+1)-\left(c_{1}+c_{20}\right)} \to (1 - \pi)^{2N} \quad \text{en faisant} (1 - \pi)^{2 - (c_1 + c_{20})} \to 1
+$$
+
+Finalement
+
+$$
+[N | \pi, y] \propto C_N^{c_1 + c_{20}} (1-\pi)^{2N} \pi^{c_1 + c_{20}} 1_{\{1,...,2000\}}(N)
+$$
+
+Plusieurs articles, comme [Castledine, 1981], [Lee, 2003] identifient cette loi comme étant une binomiale. Pourtant, nous n'avons pas réussi à identifier les paramètres pour l'écrire comme cela. La fonction dessus est très instable numériquement. On peut améliorer cela en identifiant une loi beta comme facteur :
+
+\begin{align}
+C_N^{c_1 + c_{20}} (1-\pi)^{2N} \pi^{c_1 + c_{20}}
+&= \frac{\Gamma(N+1)}{\Gamma(c_1 + c_{20} +1) \Gamma(N - c_1 - c_{20})} (1-\pi)^{2N - c_1 -c_{20} - 1} \pi^{c_1 + c_{20}}\\
+&= (1-\pi)^N \cdot \beta_\pi (c_1 + c_{20} +1, N - c_1 - c_{20})
+\end{align}
+
+où nous avons changé des constantes qui dépendent que de $\pi, c_1, c_{20}$ si nécessaire. C'est cette fonction que l'on utilisera dans notre code comme posteriori.
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 10 : ** Implémenter un algorithme MCMC sous la forme d’une fonction R nommée MCMC qui va permettre d’échantillonner dans la loi jointe a posteriori du couple $(N,\pi)$ sachant les données $y = (c_1,c_{20},c_{21})$ en mettant à jour :
+
+* le paramètre $\pi$ avec un échantillonneur de Gibbs
+* le paramètre $N$ avec un échantillonneur de Metropolis-Hastings (MH), en utilisant comme loi de proposition une loi uniforme (discrète) sur $\{N^{curr}-k,N^{curr}+k\}$ où $N$ curr désigne la valeur courante du paramètre $N$ à une itération donnée et $k$ est un paramètre de saut.
+</div>
+
+$$\\[0.1cm]$$
+
+On commence par fixer les paramètres globaux : $\verb!borne.N!$ la borne maximale des valeurs possibles de $N$, $\verb!alpha! = 1$ et $\verb!beta! = 3$ les paramètres de la loi a priori de $\pi$. On construit également 2 fonctions auxiliaires : $\verb!echant.posteriori.pi!$ qui crée un échantillon de la loi a posteriori de $\pi$ et $\verb!posteriori.N!$ qui crée un échantillon de la loi a posteriori de $N$. Ces fonctions vont être utiles dans la fonction $\verb!MCMC!$.
+
+```{r message=FALSE, warning=FALSE}
+# Paramètres globaux
+borne.N <- 2000
+alpha <- 1
+beta  <- 3
+
+# Fonctions auxiliaires
+
+# Échantilloneur a posteriori de param.pi
+echant.posteriori.pi <- function(N, c1, c20, c21){
+  rbeta(1, c1 + (c20 + c21) + alpha, 2*N - c1 - (c20 + c21) + beta)
+}
+
+# Échantilloneur a posteriori de param.pi
+posteriori.N <- function(N, param.pi, c1, c20){
+
+    res <-  (N >= 1 && N <= 2000) * dbeta(x = param.pi, shape1 = c1 + c20, shape2 = N - c1 - c20) * (1 - param.pi)^N
+
+  return(res)
+}
+```
+
+```{r message=FALSE, warning=FALSE}
+# Fonction échantillonage du couple (N, param.pi)
+
+# param.pi sera mis a jour avec echantilloneur de Gibbs
+
+# N sera mis a jour avec Metropolis-Hastings (MH)
+# de loi de proposition une loi uniforme (discrete)
+# sur {N_curr - k, N_curr + k}
+
+MCMC <- function(k, c1, c20, c21, niter){
+  #tableaux à remplir
+  chain.N <- matrix(0, niter + 1, 1)
+  chain.param.pi <- matrix(0, niter + 1, 1)
+  accept <- matrix(0, niter + 1, 1)
+  
+  # Étape 0 : valeurs initiales
+  
+  # Loi a priori de param.pi est une beta
+  param.pi <- rbeta(1, alpha, beta)
+  chain.param.pi[1,1] <- param.pi
+  
+  # Loi a priori de N est uniforme
+  N <- sample(c((c1 + c20):borne.N), size = 1)
+  chain.N[1,1] <- N
+  
+  accept[1,1] <- 1
+  
+  for (i in c(1:niter)) {
+    
+    # Mise a jour de N
+    N.candidat   <- N + sample(-k:k, 1)
+    
+    #Calcul du ratio de-Metropolis Hastings
+    numerateur   <- posteriori.N(N.candidat, param.pi = param.pi, c1 = c1, c20 = c20)
+    
+    denominateur <- posteriori.N(N, param.pi = param.pi, c1 = c1, c20 = c20)
+    
+    r <- numerateur/denominateur
+  
+    #calcul de l'acceptation
+    u <- runif(n = 1)
+    
+    if ((!is.na(r)) && (u < r)) {
+      N <- N.candidat
+      accept[i + 1, 1] <- 1
+    }
+    
+    chain.N[i + 1, 1] <- N
+    
+    # Mise a jour de pi
+    param.pi <- echant.posteriori.pi(N, c1, c20, c21)
+    chain.param.pi[i + 1,1] <- param.pi
+  
+  }
+  
+  # 2 choix de return possible selon le format souhaité :
+  #return(cbind(chain.N, chain.param.pi))
+  return(mcmc(matrix(c(chain.N, chain.param.pi,    accept),nrow=niter+1,ncol=3,byrow=FALSE)))
+}
+```
+
+On peut tester cette fonction en créant une réalisation $y$, grâce à la fonction $\verb!realisations!$, et en appliquant notre fonction $\verb!MCMC!$.
+
+```{r}
+# Créeons une réalisation pour N = 900, pi = 0.4
+y <- realisations(923, 0.15)
+c1 <- y[1]
+c20 <- y[2]
+c21 <- y[3]
+niter <- 10000
+
+# TEST
+test.mcmc <- MCMC(k = 2, c1 = c1, c20 = c20, c21 = c21, niter = niter)
+plot(test.mcmc[,c(1,2)])
+```
+
+On voit après plusieurs tests que les paramètres $N$ et $\pi$ semblent s'approcher de la bonne valeur, même si parfois la convergence semble un peu biaisée à la fin. Maintenant on se concentre à déterminer le paramètre $k$ "d'exploration" de l'espace des paramètres pour $N$.
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 11 : ** Choix du saut $k$ : Utiliser la fonction MCMC précédemment implémentée pour calculer puis tracer l’évolution du taux d’acceptation associé à la mise à jour de $N$ en fonction de différentes valeurs du paramètre $k$ (par exemple, allant de 1 à 301 par pas de 10). Pour chaque valeur de $k$,on pourra faire tourner l’algorithme MCMC pendant 10 000 itérations et qu’avec une seule chaîne de Markov pour cette étape de calibration. Quelle valeur de $k$ vous semble la meilleure (rappel : viser un taux d’acceptation d’environ 40%) ? Vous conserverez cette valeur pour la suite.
+</div>
+
+$$\\[0.1cm]$$
+
+```{r}
+k.possib <- seq(from = 1, to = 301, by = 10)
+donnees <- sapply(k.possib, MCMC, c1 = c1, c20 = c20, c21 = c21, niter = niter)
+
+taille.donnees <- dim(donnees)[1]
+
+#On récupère les données relatives à N
+donnees.N <- donnees[c(1:taille.donnees/3),]
+
+#idem pour pi
+donnees.param.pi <- donnees[c((taille.donnees/3 + 1):(2*(taille.donnees/3))),]
+
+#idem pour le taux d'acceptation
+donnees.taux <- apply(tail(donnees, n = niter), MARGIN = 2, FUN = sum)/niter
+
+plot(donnees.taux, type = 'l', main = 'Acceptation par choix de k', ylab = 'Taux d\'acceptation', xaxt = 'n', xlab = "k")
+axis(side = 1, at = 1:31,labels = k.possib)
+
+# Choix du bon k
+k <- k.possib[which.min(abs(donnees.taux - 0.4))]
+print(k)
+```
+
+On voit que le graphe a le comportement attendu, c'est-à-dire, quand $k$ est trop petit on accepte fréquemment, et quand $k$ devient très grand on accepte très peu. Pour sélectionner $k$, on a pris celui qui donne le taux d'acceptation le plus proche de $0.4$, le critère vu en cours.
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 12 : ** Lancer à présent 3 chaînes de Markov à partir de positions initiales différentes en fixant $k$ à la valeur précedemment choisie afin de générer 3 échantillons $((N^{(1)},\pi^{(1)}),...,(N^{(G)},\pi^{(G)}))$ de taille $G= 20 000$. Faites un examen visuel des chaînes de Markov obtenues et calculer la statistique de Gelman-Rubin. Identifiez-vous un problème de convergence de l’algorithme MCMC implémenté vers sa loi stationnaire ? Si oui, comment proposez-vous d’y remédier ? Combien d’itérations $X$ vous semblent a minima nécessaires pour espérer avoir atteint l’état stationnaire ?
+</div>
+
+$$\\[0.1cm]$$
+
+D'après la question précédente, on choisit pour valeur de $k$, la valeur $k = 201$. On va générer 3 chaînes de Markov à partir de positions initiales différentes afin de parcourir l'espace des paramètres $(N, \pi)$. La taille des échantillons est $G = 20 000$. L'algorithme s'initialise aléatoirement chaque fois, donc cela garantit des positions initiales différentes.
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Redefinition de la fonction MCMC sans retourner accept à la fin.
+MCMC <- function(k, c1, c20, c21, niter){
+  #tableaux à remplir
+  chain.N <- matrix(0, niter + 1, 1)
+  chain.param.pi <- matrix(0, niter + 1, 1)
+  accept <- matrix(0, niter + 1, 1)
+  
+  # Étape 0 : valeurs initiales
+  
+  # Loi a priori de param.pi est une beta
+  param.pi <- rbeta(1, alpha, beta)
+  chain.param.pi[1,1] <- param.pi
+  
+  # Loi a priori de N est uniforme
+  N <- sample(c((c1 + c20):borne.N), size = 1)
+  chain.N[1,1] <- N
+  
+  accept[1,1] <- 1
+  
+  for (i in c(1:niter)) {
+    
+    # Mise a jour de N
+    N.candidat   <- N + sample(-k:k, 1)
+    
+    #Calcul du ratio de-Metropolis Hastings
+    numerateur   <- posteriori.N(N.candidat, param.pi = param.pi, c1 = c1, c20 = c20)
+    
+    denominateur <- posteriori.N(N, param.pi = param.pi, c1 = c1, c20 = c20)
+    
+    r <- numerateur/denominateur
+
+    #calcul de l'acceptation
+    u <- runif(n = 1)
+    
+    if ((!is.na(r)) && (u < r)) {
+      N <- N.candidat
+      accept[i + 1, 1] <- 1
+    }
+    
+    chain.N[i + 1, 1] <- N
+    
+    # Mise a jour de pi
+    param.pi <- echant.posteriori.pi(N, c1, c20, c21)
+    chain.param.pi[i + 1,1] <- param.pi
+  
+  }
+  
+  # 2 choix de return possible selon le format souhaité :
+  #return(cbind(chain.N, chain.param.pi))
+  return(mcmc(matrix(c(chain.N, chain.param.pi),nrow=niter+1,ncol=2,byrow=FALSE)))
+}
+```
+
+
+```{r message=TRUE}
+niter = 20000
+
+y <- realisations(923, 0.15)
+c1 <- y[1]
+c20 <- y[2]
+c21 <- y[3]
+
+chaine.1 <- MCMC(k = k, c1 = c1, c20 = c20, c21 = c21, niter = niter)
+
+chaine.2 <- MCMC(k = k, c1 = c1, c20 = c20, c21 = c21, niter = niter)
+
+chaine.3 <- MCMC(k = k, c1 = c1, c20 = c20, c21 = c21, niter = niter)
+
+mcmc.chains <- mcmc.list(list(chaine.1,chaine.2,chaine.3))
+
+# Analyse visuelle
+model.samples.gg <- ggs(mcmc.chains)
+ggs_traceplot(model.samples.gg)
+```
+
+On remarque que les trois chaînes convergent vers la même valeur car elles se confondent à partir d'une certaine itération. Cette observation visuelle ne nous permet pas de conclure définitivement sur la nature de la convergence. C'est pourquoi on utilise un autre diagnostic, le critère de Gelman-Rubin. Ce critère ne nous permet également pas de conclure sur la nature de la convergence mais c'est un outil supplémentaire dans son étude.
+
+```{r}
+# Statistique de Gelman-Rubin 
+gelman.diag(mcmc.chains)
+gelman.plot(mcmc.chains)
+```
+
+
+Idéalement, les statistiques de Gelman-Rubin doivent être inférieures à $1.05$ (et elles sont toujours supérieures à $1$) et être stables. On vérifie visuellement la stabilité des chaînes. Si ce n'était pas le cas, on pourrait essayer d'augmenter le nombre d'itérations pour y remédier. 
+
+Finalement, on considère arbitrairement que l'on a besoin de $X = 15 000$ itérations pour espérer atteindre l'état stationnaire, c'est-à-dire 75% des itérations. On verra que les ESS associés à ce choix de $X$ sont satisfaisants, c'est notamment pour cela que l'on choisi $X = 15 000$. 
+
+```{r eval=FALSE, include=FALSE}
+
+# Code pour augmenter les itérations si nécessaire
+
+niter = 100000
+
+y <- realisations(900, 0.4)
+c1 <- y[1]
+c20 <- y[2]
+c21 <- y[3]
+
+chaine.1 <- MCMC(k = k, c1 = c1, c20 = c20, c21 = c21, niter = niter)
+
+chaine.2 <- MCMC(k = k, c1 = c1, c20 = c20, c21 = c21, niter = niter)
+
+chaine.3 <- MCMC(k = k, c1 = c1, c20 = c20, c21 = c21, niter = niter)
+
+mcmc.chains <- mcmc.list(list(chaine.1,chaine.2,chaine.3))
+
+# Analyse visuelle
+plot(mcmc.chains, density=FALSE)
+
+# Statistique de Gelman-Rubin
+gelman.diag(mcmc.chains)
+gelman.plot(mcmc.chains)
+```
+
+
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 13 : ** Analyser les autocorrélations intra-chaînes. Qu’en pensez-vous ?
+
+</div>
+
+$$\\[0.1cm]$$
+
+On continue l'étude de la convergence de notre algorithme avec l'analyse de l'autocorrélation intra-chaîne. On utilise les fonctions $\verb!autocorr.diag!$ et $\verb!autocorr.plot!$ de la librairie $\verb!coda!$. 
+
+```{r}
+# Diagnostiques du package mcmc
+# autocorr.diag(mcmc.chains)
+# autocorr.plot(mcmc.chains)
+
+# Graphes du package ggmcmc
+ggs_autocorrelation(model.samples.gg)
+```
+
+Les graphiques d'autocorrélations intra-chaînes ont une bonne allure. Elles diminuent exponentiellement dans tous les cas. Si les chaînes étaient corrélées, on n'observerai pas cette décroissance exponentielle et beaucoup plus de valeurs après le temps de chauffe seraient nécessaires pour bien approcher la loi à posteriori, ce qui coûterait énormément de temps de calcul. Dans notre cas, ce n'est pas le cas et on est satisfait de notre résultat.
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 14 : ** Supprimer les $X$ premières itérations correspondant à votre temps-de-chauffe "estimé" de l’algorithme afin de constituer votre échantillon a posteriori. Calculer la taille d’échantillon effective (ESS) de l’échantillon a posteriori constitué. Qu’en pensez-vous ? Si l’ESS vous semble trop petit, refaites tourner l’algorithme en augmentant le nombre d’itérations $G$ jusqu’à obtenir un ESS "satisfaisant" pour bien estimer $N$ et $\pi$.
+</div>
+
+$$\\[0.1cm]$$
+On assume que seulement les $25\%$ dernières itérations seront "utiles" et les autres sont comprises dans le temps de chauffe.
+
+```{r}
+niter.supprim <- round((0.75)*niter)
+print(paste('La taille d\'itérations utilisées est', niter - niter.supprim))
+```
+
+On calcule maintenant la taille d’échantillon effective (ESS) de l’échantillon a posteriori constitué :
+
+```{r}
+#Création d'une chaîne sur l'échantillon réduit :
+mcmc.chains.reduites <- mcmc.list(list(tail(chaine.1, n = niter - niter.supprim),
+                                       tail(chaine.2, n = niter - niter.supprim),
+                                       tail(chaine.3, n = niter - niter.supprim)))
+
+# Regardons de nouveau les diagnostiques
+gelman.diag(mcmc.chains.reduites)
+
+effectiveSize(mcmc.chains.reduites)
+```
+
+On utilise les $5000$ dernières itérations, et pourtant les valeurs des ESS sont beaucoup plus faibles (environ 200 à 400). Ces valeurs de ESS sont suffisamment importantes pour que l'on considère que l'algorithme a convergé, d'après certains critères arbitraires d'interprétation de ESS vus sur internet. En fait, on a besoin que les valeurs de ESS soient assez élevées pour conserver l'hypothèse d'indépendance des variables dans la convergence de l'estimateur de Monte-Carlo. Ici, nos valeurs de ESS nous semblent satisfaisantes mais si on veut qu'elles soient plus importantes, alors on peut augmenter le nombre d'itérations $G$. 
+
+$$\\[0.1cm]$$
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "blue">
+
+**Question 15 : ** Donner les statistiques a posteriori et représenter les lois a posteriori approchées pour les paramètres inconnus de votre modèle. Comparer les résultats obtenus à ceux obtenus avec une approche fréquentiste.
+</div>
+
+$$\\[0.1cm]$$
+
+Pour calculer les statistiques a posteriori, on utilise la librairie $\verb!rjags! .$. On compare l'erreur de Monte-Carlo avec l'écart-type à posteriori empirique. Idéalement, l'erreur doit être plus pétite que $0.05 \hat{\sigma}$.
+
+```{r}
+print(summary(mcmc.chains.reduites))
+plot(mcmc.chains.reduites, density=TRUE, trace=FALSE)
+```
+
+Les moyennes a posteriori sont indiquées dans la colonne "mean", les écart-types dans la colonne "SD" et les quantiles dans la partie "Quantiles for each variables". Les intervalles de crédibilité a posteriori s’obtiennent via les colonnes $2.5\%$ et $97.5\%$. On vérifie dans nos tests que la règle $\text{Time-series SE} < 0.05 \hat{\sigma}$ est en général satisfaite. On peut même augmenter le nombre d'itérations dans chaque chaîne pour garantir que cette règle soit toujours satisfaite. 
+
+Si l'on compare ces statistiques avec les valeurs $N = 923$ et $\pi = 0.15$, on voit que les intervalles de confiance les contiennent. On voit également pour $\pi$ que la moyenne et la médiane sont proches de 0.15. D'autre part, pour $N$, on remarque que l'estimation sous-estimes la valeur de 923. En effet, on remarque que la moyenne et la médiane sont inférieures à 923 dans nos essais. On voit le même résultat sur les loi a posteriori approchées où beaucoup de poids est appliqué sur la valeur de $\pi = 0.15$ et il est églament centré en 0.15. Pour $N$, on voit que le poids n'est pas centré sur 923. On conclut que les résultats semblent meilleurs pour $\pi$ que pour $N$. 
+
+Par rapport à l'approche fréquentiste utilisant l'estimateur de Pertersen, on observe que MCMC sous-estime $N$ alors que Petersen le sur-estime. Finalement, on remarque que l'avantage de l'approche bayésienne est qu'elle permet de généraliser plus facilement le modèle. Dans ce projet, nous avons étudier le cas de 2 pêches, mais en pratique, dû au grand nombre d'individus, il est peut être nécessaire de faire plusieurs marquages et pêches pour que la méthode fonctionne correctement. La théorie bayésienne est faite pour intégrer des nouvelles informations et mettre à jour le modèle lorsque l'on fait de nouvelles observations au cours du temps. Cela n'est pas possible avec l'approche fréquentiste où on ne peut pas intégrer de nouvelles observations.
+
+## Conclusion
+
+Dans ce projet, nous avons appliqué différentes méthodes et approches d'estimation de paramètres dans le cadre des méthodes de capture-marquage-recapture. Après avoir posé et étudié le problème, nous avons créer une fonction générant des réalisations que l'on a utilisée dans la suite du projet. Nous avons calculé des estimations des paramètres $N$ et $\pi$ selon différents cas de connaissance de $N$ et de $\pi$ et selon une approche fréquentiste et une approche bayésienne. L'approche fréquentiste s'est basée sur l'estimateur de Petersen, utilisé dans les méthodes de capture-marquage-recapture. Dans l'approche bayésienne, on a utilisé un algorithme MCMC. Cela nous a permis d'appréhender son utilisation et d'étudier ses résultats.
+
+## Références
+
+B. J. CASTLEDINE, A Bayesian analysis of multiple-recapture sampling for a closed population, Biometrika, Volume 68, Issue 1, April 1981, Pages 197–210, https://doi.org/10.1093/biomet/68.1.197
+
+LEE, Shen-Ming, HWANG, Wen-Han, et HUANG, Li-Hui. Bayes estimation of population size from capture-recapture models with time variation and behavior response. Statistica Sinica, 2003, p. 477-494.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

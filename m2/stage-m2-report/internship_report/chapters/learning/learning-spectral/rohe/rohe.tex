@@ -1,0 +1,223 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{./images/}}}
+
+\begin{document}
+	\section{The case of of spectral clustering}  % 📝
+	\subsection{Motivation}  % ✅
+	The work of \cite{rohe_spectral_2011} studies the question of whether 
+	spectral clustering is capable of recovering the communities of graphs 
+	generated under an SBM. Although they 
+	do not imply consistency of the 
+	algorithm and have quite strong hypotheses, their results became very 
+	popular for the intuitions they give. The objective of this section is to explain 
+	them and to understand a bit better when and \textit{why} the spectral 
+	clustering algorithm might work or not on graphs generated from an SBM. 
+	Some details will be given in the appendices, but the main objective is to 
+	make the ideas clear.
+	
+	\subsection{Notations}  % ✅
+	The matrix \(L = D^{-1/2} A D^{-1/2}\) is used as Laplacian. At first 
+	sight, it may seem different from the normalized Laplacian \(L_{\text{sym}}\) 
+	defined in \eqref{def:laplacian-matrices}. However, one can directly check 
+	these matrices have the same eigenvectors: if \(L_{\text{sym}} v = \lambda 
+	v\), then \(L v = (1 - \lambda) v\), and if \(L v = \lambda v\), then 
+	\(L_{\text{sym}} v = (1 - \lambda) v\). The difference of eigenvalues simply 
+	implies that instead of taking the \(k\) smallest eigenvectors one must take 
+	the \(k\) largest; this being taken into account, these matrices are equivalent 
+	for the analysis. 
+	\begin{remark}
+		Do pay attention when translating these results to the unnormalized 
+		Laplacian, since its eigenvectors \textit{will not} be equal to those of \(L\) 
+		(but they can easily be transformed using \(D^{1/2}\)).
+	\end{remark}
+
+	The \textit{expected} adjacency matrix is defined as \(\mathscr A \coloneqq 
+	\mathbb E [A \vert Z^{\star}]\), and the \textit{expected} degree matrix is 
+	the 
+	diagonal matrix with entries \(\mathscr D_{ii} = \sum_k \mathscr A_{ik}\). 
+	Naturally, the expected Laplacian is defined as \(\mathscr L = \mathscr 
+	D^{-1/2} \mathscr A \mathscr D^{-1/2}\). A quantity that will play a 
+	fundamental role is defined as \(\rho_n 
+	\coloneqq \min_{i=1, \dots, n} \mathscr D_{ii}^{(n)}/n\). Intuitively, it 
+	measures how quickly the number of edges accumulates as the number of 
+	nodes in the graphs generated grows. Notice that \(D_{ii}\) is the 
+	\textit{expected degree} of community \(i\).
+	
+	The structure of the results is diagrammatically shown in Figure 
+	\ref{fig:tikz-diagram-rohe}, and the analysis is divided in two parts. First, 
+	consider the question of whether the empirical counterpart of the expected 
+	Laplacian approaches it as the size of the graphs observed grows. This could 
+	be hoped for, since in the case of the adjacency matrix, the entries of \(A 
+	\vert Z\) are independent (technically, its upper triangular part is 
+	independent, and the lower triangular part is identical to it), thus there is a 
+	strong concentration of \(A\) around its expected version. As it will be seen, 
+	it is not as straightforward for the Laplacian, but fortunately with some 
+	additional work it is possible to show a similar concentration for it. Second, 
+	there is the question of whether the expected Laplacian contains or not the 
+	information on the communities. If it does, and given that the empirical 
+	Laplacian approaches it, then one could try to estimate this information from 
+	the empirical version.
+	\begin{figure}
+		\ifthenelse{\boolean{addtikz}}{
+			\subfile{./images/tikz/diagram_rohe/diagram_rohe.tex}
+		}{
+			\includegraphics{example-image-a}
+		}
+		\caption{Diagram of results in \cite{rohe_spectral_2011}. First, the 
+		question of whether the empirical Laplacians approach the expected 
+		version or not is studied; then, the question of whether the expected 
+		Laplacian contains or not the complete information on the communities is 
+		analyzed.}
+		\label{fig:tikz-diagram-rohe}
+	\end{figure}	
+	
+	\subsection{Convergence of eigenvectors}  % ✅
+	The first part consists in showing a 
+	preliminary result of concentration of 
+	the 
+	empirical Laplacian towards its expectation, that is, showing that the 
+	eigenvectors of the empirical Laplacian converge in some sense to the 
+	eigenvectors of the expected Laplacian. This conclusion would be immediate 
+	if 
+	the former converged to the latter in Frobenius norm, i.e. if \(\Vert L^{(n)} - 
+	\mathscr L^{(n)} \Vert_F \to 0\), since then the \textit{Davis-Kahan} theorem 
+	\cite{davis-kahan} would imply the alignment of their eigenspaces. 
+	Unfortunately, these matrices do 
+	not converge in Frobenius norm \cite{rohe_spectral_2011}, so a ``detour'' is 
+	needed in order to achieve this 
+	convergence. 
+	
+	What is demonstrated is that, under certain conditions, their ``squares'' converge 
+	in Frobenius norm.
+	\begin{proposition}
+		If there exists some \(N > 0\) such that \(\rho_n^2 \log n > 2\) for all \(n 
+		> 
+		N\), then
+		\begin{equation}
+			\Vert L^{(n)} L^{(n)} - \mathscr L^{(n)} \mathscr L^{(n)} \Vert_F = 
+			o \left( \frac{\log n}{\rho_n^2 n^{1/2}}\right) \quad \text{a.s.}
+		\end{equation}
+	\end{proposition}
+
+	It is important to interpret the hypothesis on \(\rho_n\). It is a type of 
+	hypothesis 
+	commonly present in consistency results such as this one. It sets the growth 
+	regime for the expected degree in order for the result to hold. As seen in 
+	\ref{sec:asymptotic-topologies}, this type of hypothesis is related to the 
+	asymptotic topology of the graphs arising from the model. In a sense, the 
+	strictness imposed by this hypothesis can be used to measure the ``strength'' of 
+	a given consistency result. The stronger this hypothesis, the denser the graphs 
+	must be for the result to hold, and the less robust the proof will be to sparsity.
+	
+	A version of the Davis-Kahan theorem then implies that, under some conditions, 
+	the eigenvectors of \(L^{(n)} L^{(n)}\) converge to the eigenvectors of \(\mathscr 
+	L^{(n)} \mathscr L^{(n)}\), up to some (unknown) \textit{rotation}. This in turn can 
+	be transformed into a convergence statement for the eigenvectors of the 
+	Laplacian without the square. The precise statement of the theorem is quite long 
+	(due to an hypothesis dealing with the rate with which the eigengap closes; 
+	the eigengap is the minimal distance between an eigenvalue of the 
+	eigenvectors being used in the algorithm, and the rest of the eigenvalues);  
+	see \cite{rohe_spectral_2011} for the details and a complete statement.
+	\begin{proposition}
+		If there exists \(N > 0\) such that \(\rho_n^2 \log n > 2\) for all \(n > N\) 
+		and 
+		if the gap \(\delta_n\) between the eigenvalues of interest and the other 
+		eigenvalues does not go to zero too quickly (cf. \cite{rohe_spectral_2011}), 
+		then for some sequence of orthonormal rotations \(O_n\),
+		\begin{equation}
+			\Vert X_n - \mathscr X_n O_n \Vert_F = 
+			o \left( \frac{\log n}{\delta_n \rho_n^2 n^{1/2}}\right) \quad \text{a.s.},
+		\end{equation}
+		where \(X_n\) is the orthogonal matrix with the eigenvectors of \(L^{(n)}\) as 
+		columns; similarly for \(\mathscr X_n\) and \(\mathscr L ^{(n)}\).
+		\label{prop:convergence-eigenvectors}
+	\end{proposition}
+
+	In short, the convergence of eigenvectors takes place up to a rotation. This 
+	rotation is immaterial for the spectral clustering algorithm, since the 
+	\(k\)-means will cluster the empirical eigenvectors solely based on their 
+	relative concentration.
+	
+	\subsection{Bounding the number of misclassified nodes}  % 📝
+	The second part of the analysis is showing that the estimation 
+	\(\hat{Z}_{\text{Spec}}^{\text{(Alg)}}\) obtained using the spectral clustering 
+	algorithm asymptotically matches the ground truth assignments \(Z^\star\). It 
+	starts by showing that applying the algorithm to the expected Laplacian (instead 
+	of the observed one) recovers the partitions of the SBM, even non-asymptotically.
+	\begin{lemma}
+		There exists a matrix \(\mu \in \mathbb R^{k \times k}\) such that the 
+		eigenvectors of \(\mathscr L\) corresponding to the nonzero eigenvalues are 
+		the columns of \(Z \mu\). Furthermore, it holds that
+		\begin{equation} \label{eq:equivalence_rohe}
+			z_i \mu = z_j \mu \iff z_i = z_j,
+		\end{equation}
+		where \(z_i\) is the \(i\)-th row of \(Z\).
+		\label{lemma:retrieval-expectation}
+	\end{lemma}
+	\begin{proof}
+		A sketch of the proof is given in Section 
+		\ref{appendix:sketch-lemma-retrieval}.
+	\end{proof}
+
+	The meaning of equivalence \eqref{eq:equivalence_rohe} is that rows \(i\) 
+	and \(j\) of \(Z \mu\) are equal if, and only if, the corresponding rows of 
+	\(Z\) are equal, that is if nodes \(i\) and \(j\) belong to the same community. 
+	Since there are \(k\) communities, this implies that there can be at most \(k\) 
+	unique rows in the matrix \(Z \mu\) of eigenvectors of \(\mathscr L\). 
+	Spectral clustering applies \(k\)-means to these vectors, and thus these 
+	become precisely the centroids of \(k\)-means (since one is applying 
+	\(k\)-means to at most \(k\) different vectors). The rows of \(Z \mu\) will 
+	then be attributed to the centroid they are equal to, and by the equivalence 
+	in Equation \eqref{eq:equivalence_rohe}, this implies that spectral clustering 
+	applied to the expected Laplacian \(\mathscr L\) identifies the communities. 
+	The rows \(z_i \mu\) constitute what will be called the \textit{expected} 
+	centroids. Of course, the above is a theoretical result, since in practice the 
+	expected Laplacian is unknown.
+	
+	To go from this theoretical consideration to an empirical one, consider that 
+	\(k\)-means is applied to the rows of \(X\), the matrix whose columns are 
+	the first \(k\) eigenvectors of the empirical Laplacian \(L\). For node \(i\), 
+	denote \(c_i\) the \textit{empirical} centroid associated to it by the 
+	\(k\)-means algorithm. Intuitively, it is expected that if the algorithm works, 
+	then the empirical centroid \(c_i\) is closer to the expected centroid \(z_i 
+	\mu\) than to the other \(z_j \mu, j \neq i\) expected centroids, since 
+	these represent communities distinct of that of \(i\). However, remember 
+	that a rotation \(O\) needed to be included in proposition 
+	\ref{prop:convergence-eigenvectors}, and it must also be included here.  The 
+	main result in 
+	\cite{rohe_spectral_2011} bounds the size of the set \(\mathscr M\) of nodes 
+	\(i\) closer to some (rotated) expected centroid \(O z_j \mu, j \neq i\) 
+	associated to another community than to its rotated expected centroid \(O 
+	z_i \mu\). \cite{rohe_spectral_2011} call the nodes in \(\mathscr M\) 
+	``misclassified'' nodes, although this is misleading since it does not make 
+	any reference to the estimated labels nor to the ground truth communities.
+	\begin{theorem}
+		Define \(P_n \coloneqq \max_{j = 1, \dots, k} (Z^t Z)_{jj}\), which is the 
+		size of the largest community for graph-sample \(n\). Denote by 
+		\(\lambda_n\) the smallest non-zero eigenvalue of \(\mathscr L_n\). If 
+		\(n^{-1/2}(\log n)^2 = O(\lambda_n^2)\) and there exists \(N\) such that 
+		for all \(n > N, \rho_n^2 > 2/\log n\), then
+		\begin{equation}
+			\vert \mathscr M \vert = o \left(\frac{P_n (\log n)^2}{\lambda_n^4 
+			\rho_n^4 n}\right).
+		\end{equation}
+	\label{thm:main-rohe}
+	\end{theorem}
+	
+	% ----------------------
+	% pName: CLARIFICATIONS ON STRENGTH OF HYP. AND RECOVERY
+	Intuitively, this result states that if the smallest eigenvalue of the expected 
+	Laplacian does not decrease too fast, and if the expected degree grows fast 
+	enough, then the empirical centroids \(c_i\) will be closer the ``correct'' 
+	rotated expected centroids \(O z_i \mu\) than to the other \(O z_j \mu\), 
+	with a proportion tending to one. Notice however that this result does not 
+	imply convergence of centroids to their expected version, and more 
+	importantly, \textit{does not} show consistency of spectral clustering. It is 
+	important to also emphasize that the conditions imposed by Theorem 
+	\ref{thm:main-rohe} are quite strong. For instance, the condition on the 
+	degree, \(\rho_n^2 \log n > 2\) is almost as strong as requiring that the 
+	expected degrees grow as \(n\). That is, very dense graphs are required, and 
+	many real graphs are sparser than this, in a way one cannot expect these 
+	results to hold in practice.
+	
+\end{document}

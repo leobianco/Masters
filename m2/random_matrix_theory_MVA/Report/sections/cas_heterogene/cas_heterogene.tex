@@ -1,0 +1,111 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{../../images/}}}
+
+\begin{document}
+
+\section{Cas Heterogène}
+
+\subsection{Connectivités tirées indépendamment d'une loi bimodale}
+
+Nous autorisons maintenant différents degrés intrinsèques pour les nœuds du 
+graphe. Les vecteurs propres de $\mathbb{E}[A]$ ne seront plus des combinaisons 
+linéaires de $j_1,...,j_K$, mais ils sont maintenant déformés par les poids 
+$q_1,...,q_n$. La variance de $A$ est
+\begin{equation*}
+	\var{A_{i,j}} = q_i q_j (1- q_i q_j) + O(n^\frac{1}{2}).
+\end{equation*}
+Ainsi, $A$ est une matrice à entrées indépendantes, de moyenne nulle, et de 
+variance $q_i q_j (1-q_i q_j).$ Ceci implique que sa mesure spectrale, et celle
+de $B/\sqrt{n}$, est celle d'une matrice de Wigner déformée. 
+
+Dans la figure \ref{fig:spectre_prelim_3} nous avons tracé la densité du spectre
+de $B/\sqrt{n}$ dans un cas avec $q_1 = 0.05$ et $q_2 = 0.5$, différentes valeurs
+de $M$, et $n = 1000$. Alors on voit que le spectre est plus étalé qu'un
+demi-cercle dans le cas où les $q_i$ sont tirées indépendamment d'une loi
+bimodale. En fonction de l'étalement des valeurs propres, nous pouvons avoir
+plus ou moins de transition de phase pour les valeurs propres isolées dues aux 
+communautés. Nous voyons que selon $M$ nous avons un nombre différent de valeurs
+propres isolées. La mesure de la performance de notre algorithme de clustering
+basé sur le spectre dans ce cas nous donne un Rand index de $\approx 0.61$.
+Ainsi, notre algorithme ne fonctionne plus.
+
+\subsection{Amélioration par renormalisation}
+\subsubsection{Renormalisation de B}
+La première idée consiste à étaler $B$ pour que son spectre soit plus proche
+d'un demi-cercle. En se basant sur la discussion du Chapitre $7$ dans 
+\cite{romain_couillet}, en particulier le lemme $7.1$, on remarque que pour des
+$q_i$ pas trop grands, $q_i q_j (1- q_i q_j) \simeq q_i q_j$ et
+$\frac{d_i}{\sqrt{\mathbf{d}^T \mathbbm{1}_n}} \simeq q_i$, où $\mathbf{d}$ est
+le vecteur des degré du graphe. Ainsi, si $D$ est la matrice diagonale des
+degrés du graphe, nous normalisons la matrice $B$ en la multipliant par $D^{-1}$
+des deux côtés comme dans l'équation \ref{B_norm}.
+\begin{equation}
+	L = \frac{d^T \mathbbm{1}_n}{\sqrt{n}} D^{-1} B D^{-1}
+	\label{B_norm}
+\end{equation}
+Ainsi, l'algorithme avec la renormalisation de $B$ est alors:
+\begin{enumerate}
+    \item Identifier les valeurs propres isolées du spectre de $L$ dans 
+	    l'équation \ref{B_norm}, où $d^T \mathbbm{1}_n$ est un facteur de
+	    normalisation. Extraire les vecteurs propres correspondants
+	    $V = [v_1, ..., v_m] \in \mathbb{R}^{n \times m}$ avec $m < K$. 
+    \item Effectuer un $K$-means pour $K$ classes sur les vecteurs lignes de $V$.
+\end{enumerate}
+
+\subsubsection{Renormalisation des vecteurs propres de B}
+
+Au lieu d'appliquer une renormalisation à la matrice $B$ en la multipliant des
+deux côtés par $D^{-1}$, nous pouvons la multiplier par $D^{-\alpha}$ comme cela
+est fait dans l'équation \ref{B_norm_alpha} pour un certain $\alpha$ que nous
+aurions encore besoin d'optimiser. 
+\begin{equation}\label{B_norm_alpha}
+L_\alpha = \frac{(d^T \mathbbm{1}_n)^\alpha}{\sqrt{n}} D^{-\alpha} B D^{-\alpha}
+\end{equation}
+D'après les discussions menées dans le Chapitre $7$ de \cite{romain_couillet},
+on voit que les vecteurs propres dominants de $L_\alpha$ sont alignés avec une
+combinaison linéaire des vecteurs $Q^{1-\alpha} j_a$ pour $a = 1,...,K$. Ainsi,
+nous devons multiplier les vecteurs propres de $L_\alpha$ par $Q^{\alpha-1}$
+avant de réaliser le K-means. Comme dans la pratique il se peut que nous ne
+connaissions pas $Q$, nous normalisons plutôt les vecteurs propres en utilisant
+$D^{\alpha-1}$. Ainsi, l'algorithme avec la renormalisation des vecteurs propres
+de $B$ est alors:
+\begin{enumerate}
+    \item Identifier les valeurs propres isolées du spectre de $L_\alpha$ dans
+	    l'équation \ref{B_norm_alpha}, pour un valeur de $\alpha$. Extraire
+	    les vecteurs propres correspondants
+	    $V = [v_1, ..., v_m] \in \mathbb{R}^{n \times m}$ avec $m < K$. 
+    \item Effectuer un $K$-means pour $K$ classes sur les vecteurs lignes de
+	    $ D^{\alpha - 1} V$.
+\end{enumerate}
+
+\subsubsection{Résultats}
+Le tableau \ref{table:1} compare les Rand indices obtenus en faisant des
+simulations avec le premier algorithme proposé pour le clustering (original),
+l'algorithme avec renormalisation de $B$ (renorm. $B$), et celui avec
+renormalisation des vecteurs propres de $B$ (renorm. eig. $B$) avec
+$\alpha = 0.5$. Nous prenons $q_1 = 0,05$, $q_2 = 0,5$, $n = 3000$ et
+$M \sim 150$. Nous voyons que la renormalisation de $B$ et le vecteur propre de
+$B$ augmentent les performances de l'algorithme dans le cas où le vecteur de
+connectivité est dessiné indépendamment par une loi bimodale.
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{||c c||} 
+ \hline
+ Algo. & Adjus. Rand Index  \\ [0.5ex] 
+ \hline\hline
+ original & 0.61 \\ 
+ \hline
+ renom. $B$ & 0.74 \\
+ \hline
+ renom. eig. $B$ & 0.93 \\ [1ex] 
+ \hline
+\end{tabular}
+\caption{Comparaison des Rand indices pour des simulations utilisant
+l'algorithme original, et celles avec la renormalisation de $B$ et la
+renormalisation des vecteurs propres de $B$ pour $\alpha = 0.5$. Les paramètres
+sont $n = 3000$, $q_1 = 0.05$, $q_2 = 0.5$, et $M \sim 150$.}
+\label{table:1}
+\end{table}
+
+\end{document}

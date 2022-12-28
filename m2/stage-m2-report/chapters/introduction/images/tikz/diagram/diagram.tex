@@ -1,0 +1,153 @@
+\documentclass[tikz, border=0.2cm]{standalone}
+\usetikzlibrary{arrows, shapes, positioning, fit, calc}
+\usepackage{amsmath}
+
+\begin{document}
+	
+\tikzset{
+	every node/.style={
+		text opacity=1
+	},
+	block/.style={
+		draw, rectangle,
+		fill opacity = 0.1, text opacity=1,
+	    minimum width=5em,
+		outer sep = 0px 
+	},
+	container/.style={
+		rectangle, node contents={}, 
+%		draw=red
+	}
+}
+
+\begin{tikzpicture}
+
+\node (matrix-1) [matrix] {
+	\node (sub-1-matrix-1) [block] {Unknown};
+	\node (sub-2-matrix-1) [right=of sub-1-matrix-1] 
+		{\((G_U, Z_U^\star)\)};
+	\node (text-matrix-1) at ($(sub-1-matrix-1)!0.5!(sub-2-matrix-1) + (0,1)$)
+	{\footnotesize NATURE};
+	\\
+};
+\node (container-1) [
+	container, fit=(matrix-1),
+	fill=purple, fill opacity=0.1, 
+	draw=purple, thick,
+	minimum width = 160px
+	] 
+{};
+
+\node (matrix-2) [matrix, below=24px of matrix-1] {
+	\node (sub-1-matrix-2) [block] 
+		{SBM};
+	\node (sub-2-matrix-2) [right=of sub-1-matrix-2] 
+		{\((G_{\text{SBM}}, Z_{\text{SBM}}^\star)\)};
+	\node (sub-3-matrix-2) [block, below=of sub-1-matrix-2] 
+		{GBM};
+	\node (sub-4-matrix-2) [right=of sub-3-matrix-2] 
+		{\((G_{\text{GBM}}, Z_{\text{GBM}}^\star)\)};
+	\node (ellipsis-matrix-2) 
+		at ($(sub-3-matrix-2)!0.5!(sub-4-matrix-2) + (0,-1)$)
+		{\(\vdots \quad \infty\)};
+	\node (text-matrix-2) at ($(sub-1-matrix-2)!0.5!(sub-2-matrix-2) + (0,1)$)
+	{\footnotesize PROBABILISTIC MODELS};
+\\
+};
+\node (container-2) [
+	container, fit=(matrix-2),
+	fill=green, fill opacity=0.1,
+	draw=green, thick,
+	minimum width = 160px
+	] 
+{};
+
+\node (matrix-3) [matrix, right=256px of matrix-1] {
+	\node (sub-1-matrix-3) [block] {Spectral};
+	\node (sub-2-matrix-3) [right=of sub-1-matrix-3, align=left] 
+		{\small
+			\(\hat Z_{\text{Spec}}\) for \(Z^\star\),\\
+			\small based on some heuristic;
+			\\ \small
+			Algorithm for calculating \(\hat Z_{\text{Spec}}\) \\
+			\small yields \(\hat 
+			Z_{\text{Spec}}^{\text{(Alg)}}\).
+		};
+	\node (ellipsis-matrix-3) 
+	at ($(sub-1-matrix-3)!0.5!(sub-2-matrix-3) + (0,-1)$)
+	{\(\vdots \quad \infty\)};
+	\node (text-matrix-3) at ($(sub-1-matrix-3)!0.5!(sub-2-matrix-3) + (0,1)$)
+	{HEURISTICS};
+	\\
+};
+\node (container-3) [
+	container, fit=(matrix-3),
+	fill=yellow, fill opacity=0.1,
+	draw=yellow, thick] 
+{};
+
+\node (matrix-4) [matrix, below=24px of matrix-3] {
+	\node (sub-1-matrix-4) [block] {SBM};
+	\node (sub-2-matrix-4) [right=of sub-1-matrix-4, align=left] 
+		{
+			\small Assume \((G, Z^\star) \sim \text{SBM}(n, \pi, \Gamma)\);\\
+			\small Proposal of \(\hat Z_{\text{SBM}}\) for \(Z^\star\); \\
+			\small Algorithm for calculating \(\hat Z_{\text{SBM}}\)\\
+			\small yields \(\hat Z_{\text{SBM}}^{\text{(Alg)}}\)
+		};
+	\node (ellipsis-matrix-4) 
+	at ($(sub-1-matrix-4)!0.5!(sub-2-matrix-4) + (0,-1)$)
+	{\(\vdots \quad \infty\)};
+	\node (text-matrix-4) at ($(sub-1-matrix-4)!0.5!(sub-2-matrix-4) + (0,1)$)
+	{\footnotesize PROBABILISTIC MODELS};
+	\\
+};
+\node (container-4) [
+	container, fit=(matrix-4),
+	fill=black, fill opacity=0.1,
+	draw=black, thick] 
+{};
+
+\node (container-matrices-12) [container, fit=(matrix-1) (matrix-2)] 
+{};
+
+\node (container-matrices-34) [container, fit=(matrix-3) (matrix-4)] 
+{};
+
+% Observation
+\node (observation) at ($(container-matrices-12)!0.4!(container-matrices-34)$)
+{\((G, Z^{\star})\)};
+
+% Output
+\node (output) [right=of container-matrices-34]
+{\(\hat{Z}_{\text{Method}}^{\text{(Alg)}}\)};
+
+% Arrows
+% Outer
+\draw[shorten >=0.5cm, shorten <=0.5cm, ->]
+(container-1) edge node[above right]{\tiny Applications} 
+(observation)
+(container-2) edge node[below right, align=left]{\tiny Statistical\\[-5pt]
+\tiny Learning}(observation)
+(observation) edge node[above left, align=left]{\tiny Choice of\\[-5pt] \tiny 
+algorithm} (container-3)
+(observation) edge (container-4)
+;
+\draw[shorten >= 0.2cm, shorten <= 0.5cm, ->]
+(container-3) edge node[above right]{\tiny Output} (output)
+(container-4) edge (output) 
+;
+% Inner
+\draw[shorten <= 0.2cm, ->]
+(sub-1-matrix-1) edge (sub-2-matrix-1)
+(sub-1-matrix-2) edge (sub-2-matrix-2)
+(sub-3-matrix-2) edge (sub-4-matrix-2)
+;
+\draw[shorten <= 0.2cm, ->]
+
+;
+
+
+\end{tikzpicture}
+
+\end{document}

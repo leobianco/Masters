@@ -1,0 +1,91 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{./images/}}}
+
+\begin{document}
+	
+\section{Proof of EM explicit steps} \label{proof:em-steps}
+
+Having fixed a value for \(\hat \theta\), maximize the mean-field ELBO 
+with respect to \(\tau\) under the constraint that \(\tau_{ik} \geq 0\) for \(1 
+\leq i \leq n\) and \(1 \leq k \leq K\), and that \(\sum_k \tau_{ik} = 1\) for 
+\(1 \leq i \leq n\); then, for a fixed \(\hat \tau\), maximize the mean-field 
+ELBO with respect to \(\theta\) under the constraint \(0 < \pi_k < 1, 1 \leq k 
+\leq K \) and so on. 
+
+\subsubsection{Optimizing for \(\hat \tau \)} By penalizing the constraints for
+\(\tau\) on the ELBO, one gets a Lagrangian \(\mathscr L\) which when derived 
+and equaled to zero yields
+\begin{dmath*}
+	\nabla_{\tau_{ik}} \mathscr L = \log{\pi_k} - 1 - \log{\tau_{ik}} +
+	\sum_{\substack{j > i \\ l = 1, \dots, K}} A_{ij} \tau_{jl}
+	\log{\gamma_{kl}} + \left( 1 - A_{ij} \right) \tau_{jl} \log{\left( 1 -
+		\gamma_{kl}
+		\right)} + \mu_i = 0.
+\end{dmath*}
+This can be directly rearranged to the following fixed point relation
+\begin{equation}
+	\hat \tau_{ik} \propto \pi_k \prod_{\substack{j > i \\ l = 1, \dots, K}}
+	\left( \gamma_{kl}^{A_{ij}} \left( 1 - \gamma_{kl} \right)^{\left( 1 -
+		A_{ij}
+		\right)} \right)^{\tau_{jl}}.
+	\label{eq:fixed-point-tau-proof}
+\end{equation}
+Thus, one ``general way'' of obtaining \(\hat \tau\) is by evaluating Equation
+\eqref{eq:fixed-point-tau-proof} repeatedly until convergence.
+
+\subsubsection{Optimizing for \(\hat \theta\)} As \(\pi_k\) appears inside a
+logarithm in the ELBO, the positivity constraint is naturally enforced by the
+objective function. Therefore one only needs to impose that it sums to one. The 
+Lagrangian then becomes
+\begin{equation*}
+	\mathscr L = - \sum_{i=1}^n \sum_{k=1}^K \tau_{ik}
+	\log{\frac{\pi_k}{\tau_{ik}}} + \mu \left( \sum_{l=1}^K \pi_l -
+	1\right),
+\end{equation*}
+and its derivative equaled to zero provides the equation
+\begin{equation*}
+	\nabla_{\pi_k} \mathscr L = -\sum_{i=1}^n \frac{\tau_{ik}}{\pi_k} + \mu
+	= 0.
+\end{equation*}
+This optimality condition gives the estimator sought in terms of the Lagrange
+multiplier
+\begin{equation*}
+	\hat \pi_k = \frac{1}{\mu} \sum_{i=1}^n \tau_{ik}.
+\end{equation*}
+To find the value of the Lagrange multiplier, one must solve the dual problem.
+Lagrange's dual function writes
+\begin{equation*}
+	q \left( \mu \right) = - \sum_{i=1}^n \sum_{k=1} \tau_{ik}
+	\log{\left( \frac{\sum_{l=1}^K \tau_{lk}}{\mu \tau_{ik}} \right)} +
+	\tau_{ik} - \mu.
+\end{equation*}
+The dual problem is \(\max_\mu {q(\mu)}\), which is unconstrained:
+\begin{equation*}
+	\nabla_\mu q = \sum_{i=1}^n \sum_{k=1}^K \frac{\tau_{ik}}{\mu} - 1 = 0
+	\implies \mu = \sum_{i=1}^n \sum_{k=1}^K \tau_{ik} = n.
+\end{equation*}
+Substituting the value found for \(\mu\) back into the estimator for \(\hat
+\pi\), one concludes
+\begin{equation} \label{eq:pi-hat}
+	\hat \pi_k = \frac{1}{n} \sum_{i=1}^n \tau_{ik}.
+\end{equation}
+A similar procedure generates estimators for the connectivities \(\gamma\), the
+difference being that these are unconstrained, so that by deriving the ELBO 
+directly one gets
+\begin{align*}
+	\nabla_{\gamma_{kl}} \mathcal L &= \sum_{i=1}^n \sum_{j=1}^n
+	\tau_{ik} \tau_{jl} \left( \frac{A_{ij}}{\gamma_{kl}} -
+	\frac{1 - \delta_{ij} - A_{ij}}{1 - \gamma_{kl}} \right) = 0\\
+	&\implies \sum_{i=1}^n \sum_{j=1}^n \tau_{ik} \tau_{jl} \left(
+	A_{ij} - \gamma_{kl} \left( 1 - \delta_{ij} \right) \right) = 0.
+\end{align*}
+This optimality condition yields the estimator sought:
+\begin{equation} \label{eq:gamma-hat-proof}
+	\hat \gamma_{kl} = \frac{\sum_{i=1}^n \sum_{j=1}^n \tau_{ik}
+		\tau_{jl} A_{ij}}{\sum_{i=1}^n \sum_{j=1}^n \tau_{ik} \tau_{jl} \left(
+		1 - \delta_{ij} \right)}.
+\end{equation}
+These equations can be simplified in the simple case of two communities, which 
+is a fundamental example for building intuition and testing hypotheses.
+
+\end{document}

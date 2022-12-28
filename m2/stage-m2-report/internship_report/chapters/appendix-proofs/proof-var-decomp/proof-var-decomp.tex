@@ -1,0 +1,51 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{./images/}}}
+
+\begin{document}
+
+\section{Proof of Theorem \ref{thm:var-decomp}} \label{app:proof-var-decomp}
+
+The posterior is defined as
+\begin{equation*}
+	p \left( Z \vert A; \theta \right) = \frac{p \left(Z, A; \theta \right)}
+	{p \left( A; \theta \right)},
+\end{equation*}
+which implies
+\begin{equation*}
+	p \left( A; \theta \right) = \frac{p \left( Z, A; \theta \right)}
+	{p \left( Z \vert A; \theta \right)}.
+\end{equation*}
+Thus,
+\begin{equation*}
+	\log p \left( A; \theta \right) = \log p \left( Z, A; \theta \right)
+	- \log p \left( Z \vert A; \theta \right).
+\end{equation*}
+Taking the expectation of this expression with respect to some proposal
+distribution \(q(Z)\) depending only on \(Z\), one has
+\begin{align*}
+	\log p \left( A; \theta \right) 
+	&= \int_{Z} \log p \left( Z, A; \theta
+	\right) q \left( Z \right) \, dZ - \int_{Z} \log p \left( Z \vert A;
+	\theta \right) q \left( Z \right) \, dZ \\
+	&= \int_{Z} \left( \log \left( \frac{p \left( Z, A; \theta \right)}{q
+		\left( Z \right)} \right) - \log q \left( Z \right) \right) q \left( Z
+	\right) \, dZ \\
+	&\qquad - \int_{Z} \left( \log \left( \frac{p \left( Z \vert A; \theta 
+		\right)}
+	{q \left( Z \right)} \right) - \log q \left( Z \right) \right) q \left( 
+	Z \right) \, dZ.
+\end{align*}
+Therefore,
+\begin{equation*}
+	\log p \left( A; \theta \right) = \int_{Z} \log \left(
+	\frac{p \left( Z, A; \theta \right)}{q(Z)} \right) q(Z) \, dZ -
+	\int_{Z} \log \left( \frac{p \left( Z \vert A; \theta \right)}{q(Z)}
+	\right) q(z) \, dZ,
+\end{equation*}
+that is,
+\begin{equation*}
+	\log p \left( A; \theta \right) = F \left(q, \theta \right) +
+	\KL\left(q \Vert p \left( Z \vert A; \theta \right) \right).
+\end{equation*}
+
+\end{document}

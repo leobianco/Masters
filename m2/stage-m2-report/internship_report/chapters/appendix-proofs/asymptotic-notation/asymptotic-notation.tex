@@ -1,0 +1,34 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{./images/}}}
+
+\begin{document}
+
+\section{Asymptotic notation}
+\label{app:asymptotic-notation}
+This section some asymptotic notations for sequences that are commonly used 
+in probability. To avoid redundancy, in what follows, let \((x_n)_{n \in \mathbb 
+N}\) and \((y_n)_{n \in \mathbb N}\) be a pair of real sequences.
+
+\begin{definition}
+	One denotes \(x_n = O (y_n)\) (read \textit{\(x_n\) is big-oh \(y_n\)}) if there 
+	exists some \(N \in \mathbb N\) and some real constant \(C > 0\) such that 
+	\(\vert x_i \vert \leq C \vert y_i \vert\) for all \(i > N\).	
+\end{definition}
+
+\begin{definition}
+	One denotes \(x_n = o (y_n)\) (read \textit{\(x_n\) is 
+	little-oh \(y_n\)}) if for every \(C > 0\) there exists some \(N \in \mathbb N\) 
+	such that for all \(n > N\), \(\vert x_n \vert < C \vert y_n \vert\).
+\end{definition}
+
+\begin{definition}
+	One denotes \(x_n = \Omega (y_n)\) (read \textit{\(x_n\) is capital-omega 
+	\(y_n\)}) if \(y_n = O(x_n)\).	
+\end{definition}
+
+\begin{definition}
+	One denotes \(x_n = \omega (y_n)\) (read \textit{\(x_n\) is little-omega 
+		\(y_n\)}) if \(y_n = o (x_n)\).
+\end{definition}
+
+\end{document}

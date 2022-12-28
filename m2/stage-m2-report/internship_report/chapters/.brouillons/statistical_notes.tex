@@ -1,0 +1,70 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{./images/}}}
+
+\begin{document}
+	
+\section{EM algorithm}
+\subsection{Classic EM} \label{subsec:classic-em}
+Consider a model with latent variables and the problem of finding maximum 
+likelihood estimates for the observed model likelihood. That is, finding \(\hat 
+\theta \coloneqq \argmax_\theta \log{p(x; \theta)}\). In most cases, equalling 
+derivatives to zero results in a complicated system of equations. Thus in most 
+models one must consider numerical schemes for this problem. One option is 
+gradient ascent methods. Another option is variational inference. A third and 
+very classical option is the EM algorithm. It can be used when evaluating 
+expectations with respect to the posterior is tractable.
+
+Consider again, the variational decomposition in Equation 
+\ref{eq:variational-decomposition-2}, this time making the dependency on 
+the parameter \(\theta\) explicit:
+\begin{equation*}
+	\log{p(x; \theta)} = F(q, \theta) + \KL (q \Vert p(\cdot \vert x; 
+	\theta)).
+\end{equation*}
+This is valid for all distributions \(q\) and parameters \(\theta\). In 
+particular, for some ``starting'' \(\theta_0\) and \(q = p(z \vert x; 
+\theta_0)\),
+\begin{equation} \label{eq:loglik-initial}
+	\log{p(x; \theta_0)} = F(p(z \vert x; \theta_0), \theta_0).
+\end{equation}
+For a general \(\theta\),
+\begin{equation}
+	\log{p(x; \theta)} = F(p(z \vert x; \theta_0), \theta) + \KL (p(z \vert x; 
+	\theta_0) \Vert p(\cdot \vert x; 
+	\theta)).
+\end{equation}
+Notice that since \(\theta_0\) is fixed, \(q(z) = p(z \vert x; \theta_0)\) does 
+not depend on \(\theta\). Let \(\theta_1 \coloneqq \argmax_\theta F(p(z \vert 
+x; \theta_0), \theta)\). 
+Then,
+\begin{equation*}
+	\log{p(x; \theta_1)} \stackrel{\KL \geqslant 0}{\geq} F(p(z 
+	\vert x; 
+	\theta_0), \theta) \stackrel{\scriptsize \text{def. } \theta_1}{\geq} F(p(z 
+	\vert x; 
+	\theta_0), \theta_0) = \log{p(x; \theta_0)}.
+\end{equation*}
+This means that the ``step'' \(\theta_0 \to \theta_1\) is guaranteed to be 
+non-decreasing for the log-evidence. Making similar steps \(\theta_1 \to 
+\theta_2\), \(\theta_2 \to \theta_3\), and so on, will always non-decrease 
+\(\log{p(x; \theta)}\). Now, notice that from the definition of the ELBO in 
+Equation \ref{eq:def-elbo}, at any step \(t\)
+\begin{equation*}
+	F(p(z \vert x; \theta_t), \theta) = - \mathcal{H}(p(z \vert x; \theta_t)) + 
+	\mathbb E_{p(z \vert x; \theta_t)} [\log{p(x,z; \theta)}].
+\end{equation*}
+The entropy term does not depend on \(\theta\), thus at each step \(t\) one 
+only needs to maximize the expectation of the complete log-likelihood with 
+respect to the posterior at that step. The objective function to maximize is 
+commonly denoted
+\begin{equation} \label{eq:EM-objective}
+	Q(\theta \vert \theta_t) \coloneqq \mathbb E_{p(z \vert x; \theta_t)} 
+	[\log{p(x,z; \theta)}].
+\end{equation}
+Writing \(Q\) down as a function of \(\theta\) at each step is called the 
+\textit{expectation step}, or \textit{E-step}, since it amounts to calculating 
+an integral. Maximizing the resulting function in \(\theta\) is then called the 
+\textit{maximization step}, or \textit{M-step}. The EM algorithm typically 
+requires a tractable posterior for the evaluation of the E-step.
+
+\end{document}
