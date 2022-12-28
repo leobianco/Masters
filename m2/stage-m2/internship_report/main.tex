@@ -1,0 +1,70 @@
+\documentclass[11pt]{report}
+
+% Preamble
+\input{preamble.tex}
+
+% Custom commands
+\input{commands.tex}
+
+% Control, for faster compilation
+\newboolean{addtikz}
+\setboolean{addtikz}{true}  % set to true to 
+%include 
+%tikz
+
+% Title page
+\title{Aspects of community detection on graphs}
+\author{Leonardo Martins Bianco\\[0.5cm]{\small Advised by Christine 
+Keribin and Zacharie Naulet}}
+\date{ }  % Omits date
+
+
+\begin{document}
+
+% Title page, abstract, ToC
+\maketitle
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% Subfiles
+\chapter{Introduction}
+\subfile{chapters/introduction/introduction}
+
+\chapter{Algorithms for community detection}
+\subfile{chapters/statistical/variational-inference-general/variational-inference-general}
+\subfile{chapters/spectral/spectral-clustering/spectral-clustering}
+
+\chapter{Statistical learning theory}
+\subfile{chapters/learning/agreement-recovery/agreement-recovery}
+\subfile{chapters/learning/asymptotic-topologies/asymptotic-topologies}
+\subfile{chapters/learning/learning-statistical/learning-statistical}
+\subfile{chapters/learning/learning-spectral/rohe/rohe}
+
+%\chapter{Numerical experiments}
+%\subfile{chapters/numerical/numerical-vem/numerical-vem}
+
+\chapter{Conclusion and outlook}
+\subfile{chapters/conclusion/conclusion}
+
+\appendix
+
+\chapter{Proofs, calculations, extra 
+definitions}
+\subfile{chapters/appendix-proofs/proof-var-decomp/proof-var-decomp}
+\subfile{chapters/appendix-proofs/proof-mf-elbo/proof-mf-elbo}
+\subfile{chapters/appendix-proofs/calc-var-estim/calc-var-estim}
+\subfile{chapters/appendix-proofs/EM-local-maxima/EM-local-maxima}
+\subfile{chapters/appendix-proofs/retrieval-expected/retrieval-expected}
+\subfile{chapters/appendix-proofs/asymptotic-notation/asymptotic-notation}
+\subfile{chapters/appendix-proofs/variational-consistency/variational-consistency}
+
+\chapter{The case of two communities}
+\subfile{chapters/appendix-two-comm/two-communities/two-communities}
+
+% Bibliography
+\clearpage  % Separate page for bibliography
+\nocite{*}  % Cites all entries in references.bib
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

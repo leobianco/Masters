@@ -1,0 +1,164 @@
+\begin{thebibliography}{10}
+
+\bibitem{abbe_community_2017}
+Emmanuel Abbe.
+\newblock Community detection and stochastic block models: recent developments.
+\newblock {\em arXiv:1703.10146 [cs, math, stat]}, March 2017.
+\newblock arXiv: 1703.10146.
+
+\bibitem{abbe_graph_2020}
+Emmanuel Abbe, Enric Boix-Adserà, Peter Ralli, and Colin Sandon.
+\newblock Graph powering and spectral robustness.
+\newblock {\em SIAM Journal on Mathematics of Data Science}, 2(1):132--157,
+  January 2020.
+\newblock Publisher: Society for Industrial and Applied Mathematics.
+
+\bibitem{acharya__2022}
+Jayadev Acharya, Ayush Jain, Gautam Kamath, Ananda~Theertha Suresh, and Huanyu
+  Zhang.
+\newblock Robust estimation for random graphs, February 2022.
+\newblock arXiv:2111.05320 [cs, math, stat].
+
+\bibitem{bui_finding_1992}
+Thang~Nguyen Bui and Curt Jones.
+\newblock Finding good approximate vertex and edge partitions is {NP}-hard.
+\newblock {\em Information Processing Letters}, 42(3):153--159, May 1992.
+
+\bibitem{deng_strong_2020}
+Shaofeng Deng, Shuyang Ling, and Thomas Strohmer.
+\newblock Strong {Consistency}, {Graph} {Laplacians}, and the {Stochastic}
+  {Block} {Model}.
+\newblock Technical Report arXiv:2004.09780, arXiv, April 2020.
+\newblock arXiv:2004.09780 [cs, stat] type: article.
+
+\bibitem{erdos59a}
+P.~Erd\"{o}s and A.~R\'{e}nyi.
+\newblock On random graphs i.
+\newblock {\em Publicationes Mathematicae Debrecen}, 6:290, 1959.
+
+\bibitem{koller2009probabilistic}
+D.~Koller and N.~Friedman.
+\newblock {\em Probabilistic Graphical Models: Principles and Techniques}.
+\newblock Adaptive computation and machine learning. MIT Press, 2009.
+
+\bibitem{latouche_overlapping_2011}
+Pierre Latouche, Etienne Birmelé, and Christophe Ambroise.
+\newblock Overlapping stochastic block models with application to the {French}
+  political blogosphere, April 2011.
+\newblock arXiv:0910.2098 [stat].
+
+\bibitem{le_estimating_2019}
+Can~M. Le and Elizaveta Levina.
+\newblock Estimating the number of communities in networks by spectral methods,
+  November 2019.
+\newblock arXiv:1507.00827 [cs, math, stat].
+
+\bibitem{legramanti_extended_2022}
+Sirio Legramanti, Tommaso Rigon, Daniele Durante, and David~B. Dunson.
+\newblock Extended {Stochastic} {Block} {Models} with {Application} to
+  {Criminal} {Networks}, April 2022.
+\newblock arXiv:2007.08569 [stat].
+
+\bibitem{stanford-resources}
+Jure Leskovec.
+\newblock Stanford large network dataset collection.
+\newblock \url{https://snap.stanford.edu/data/#communities}.
+\newblock Accessed: 2022-08-25.
+
+\bibitem{liu__2022}
+Allen Liu and Ankur Moitra.
+\newblock Minimax rates for robust community detection, July 2022.
+\newblock arXiv:2207.11903 [cs, math, stat].
+
+\bibitem{lloyd-k-means}
+S.~Lloyd.
+\newblock Least squares quantization in pcm.
+\newblock {\em IEEE Transactions on Information Theory}, 28(2):129--137, 1982.
+
+\bibitem{l1996handbook}
+H.~Lutkepohl.
+\newblock {\em Handbook of Matrices}.
+\newblock Wiley, 1996.
+
+\bibitem{mariadassou}
+Mahendra Mariadassou, Stéphane Robin, and Corinne Vacher.
+\newblock Uncovering latent structure in valued graphs: {A} variational
+  approach.
+\newblock {\em The Annals of Applied Statistics}, 4(2):715--742, June 2010.
+\newblock Publisher: Institute of Mathematical Statistics.
+
+\bibitem{mezard2009information}
+Marc Mezard and Andrea Montanari.
+\newblock {\em Information, physics, and computation}.
+\newblock OUP Oxford, 2009.
+
+\bibitem{miele_revealing_2017}
+Vincent Miele and Catherine Matias.
+\newblock Revealing the hidden structure of dynamic ecological networks.
+\newblock {\em Royal Society Open Science}, 4(6):170251, June 2017.
+
+\bibitem{morelli_nested_2021}
+Leonardo Morelli, Valentina Giansanti, and Davide Cittaro.
+\newblock Nested {Stochastic} {Block} {Models} applied to the analysis of
+  single cell data.
+\newblock {\em BMC Bioinformatics}, 22(1):576, November 2021.
+
+\bibitem{newman-resources}
+Mark Newman.
+\newblock Network data.
+\newblock \url{http://www-personal.umich.edu/~mejn/netdata/}.
+\newblock Accessed: 2022-08-25.
+
+\bibitem{peixoto-resources}
+Tiago Peixoto.
+\newblock Netzschleuder.
+\newblock \url{https://networks.skewed.de/}.
+\newblock Accessed: 2022-08-25.
+
+\bibitem{pozo-resources}
+Roldan Pozo.
+\newblock Complex network resources.
+\newblock \url{https://math.nist.gov/~RPozo/complex_datasets.html}.
+\newblock Accessed: 2022-08-25.
+
+\bibitem{rohe_spectral_2011}
+Karl Rohe, Sourav Chatterjee, and Bin Yu.
+\newblock Spectral clustering and the high-dimensional stochastic blockmodel.
+\newblock {\em The Annals of Statistics}, 39(4), August 2011.
+\newblock arXiv: 1007.1684.
+
+\bibitem{sarkar_when_2021}
+Purnamrita Sarkar, Y.~X.~Rachel Wang, and Soumendu~S. Mukherjee.
+\newblock When random initializations help: a study of variational inference
+  for community detection.
+\newblock {\em Journal of Machine Learning Research}, 22(22):1--46, 2021.
+
+\bibitem{van2000asymptotic}
+A.W. van~der Vaart.
+\newblock {\em Asymptotic Statistics}.
+\newblock Asymptotic Statistics. Cambridge University Press, 2000.
+
+\bibitem{von_luxburg_tutorial_2007}
+Ulrike von Luxburg.
+\newblock A {Tutorial} on {Spectral} {Clustering}.
+\newblock {\em arXiv:0711.0189 [cs]}, November 2007.
+\newblock arXiv: 0711.0189.
+
+\bibitem{wang_likelihood-based_2016}
+Y.~X.~Rachel Wang and Peter~J. Bickel.
+\newblock Likelihood-based model selection for stochastic block models.
+\newblock {\em arXiv:1502.02069 [math, stat]}, February 2016.
+\newblock arXiv: 1502.02069.
+
+\bibitem{yan_provable_2018}
+Bowei Yan, Purnamrita Sarkar, and Xiuyuan Cheng.
+\newblock Provable {Estimation} of the {Number} of {Blocks} in {Block}
+  {Models}.
+\newblock {\em arXiv:1705.08580 [stat]}, March 2018.
+\newblock arXiv: 1705.08580.
+
+\bibitem{davis-kahan}
+Yi~Yu, Tengyao Wang, and Richard~J. Samworth.
+\newblock A useful variant of the davis--kahan theorem for statisticians, 2014.
+
+\end{thebibliography}

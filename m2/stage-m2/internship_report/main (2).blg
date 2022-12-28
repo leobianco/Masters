@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2021)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+The style file: plain.bst
+Database file #1: references.bib
+Warning--I didn't find a database entry for "brault_consistency_2020"
+You've used 28 entries,
+            2118 wiz_defined-function locations,
+            649 strings with 8194 characters,
+and the built_in function-call counts, 7687 in all, are:
+= -- 734
+> -- 385
+< -- 1
++ -- 154
+- -- 124
+* -- 481
+:= -- 1347
+add.period$ -- 97
+call.type$ -- 28
+change.case$ -- 142
+chr.to.int$ -- 0
+cite$ -- 28
+duplicate$ -- 265
+empty$ -- 613
+format.name$ -- 124
+if$ -- 1577
+int.to.chr$ -- 0
+int.to.str$ -- 28
+missing$ -- 21
+newline$ -- 154
+num.names$ -- 56
+pop$ -- 185
+preamble$ -- 1
+purify$ -- 118
+quote$ -- 0
+skip$ -- 191
+stack$ -- 0
+substring$ -- 290
+swap$ -- 28
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 104
+warning$ -- 0
+while$ -- 68
+width$ -- 30
+write$ -- 312
+(There was 1 warning)

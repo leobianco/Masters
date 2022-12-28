@@ -1,0 +1,175 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{./images/}}}
+
+\begin{document}
+
+\section{Proofs of variational consistency}
+\label{sec:variational-consistency-proofs}
+Here are the proofs and proof sketches relative to Section 
+\ref{sec:variational-consistency}.
+
+\subsection{Lemmas and propositions}
+The consistency of the MLE in the complete case is easy to establish. See 
+\cite{brault_consistency_2020} for a proof.
+\begin{proposition}
+	The maximum complete likelihood estimator is asymptotically 
+	normal (implying consistency), that is, there exist matrices 
+	\(\Sigma_{\pi^\star}\) and 
+	\(\Sigma_{\Gamma^\star}\) (that can be explicitly written) such that
+	\begin{equation}
+		\sqrt{n} (\hat{\pi}(z^\star) - \pi^\star) \xrightarrow[n \to \infty]{\mathcal 
+			D} \mathcal N (0, \Sigma_{\pi^\star}),
+	\end{equation}
+	and for all \(l, m\) in \(\{1, \dots, k\}\)
+	\begin{equation}
+		n (\hat{\Gamma}_{lm}(z^\star) - \Gamma^\star_{lm}) \xrightarrow[n \to 
+		\infty]{\mathcal 
+			D} \mathcal N (0, \Sigma_{\Gamma^\star}).
+	\end{equation}
+	\label{prop:consistency-complete-mle}
+\end{proposition}
+
+Moreover, the following important expansion of \(\mathcal L^\star_c\) holds.
+\begin{proposition}
+	Denote \(I_{\pi^\star} \coloneqq \textup{Diag}^{-1}(\pi^\star)\), and 
+	\(I_{\Gamma^\star}\) the component-wise inverse of 
+	\(\Sigma_{\Gamma^\star} \coloneqq \textup{Diag}(\Gamma^\star) - 
+	\Gamma^\star (\Gamma^\star)^t\). For any perturbations \(s\) and \(t\) in a 
+	compact set such that \(s^t \mathbf{1}_{k} = 0\), it holds that
+	\begin{multline}
+		\mathcal{L}^\star_c \left( \pi^\star + \frac{s}{\sqrt n}, \Gamma^\star + 
+		\frac{t}{n}\right) - \mathcal L^\star_c (\theta^\star) = \\
+		s^t Y_{\pi^\star} + \textup{Tr}(t^t 
+		Y_{\Gamma^\star})
+		- \left(\frac{1}{2} s^t I_{\pi^\star} s + \frac{1}{2} \textup{Tr}[(t \odot t)^t 
+		I_{\Gamma^\star}]\right) + o_P (1),
+		\label{eq:expansion}
+	\end{multline}
+	where \(\odot\) denotes the entry-wise product of two matrices, 
+	\(Y_{\pi^\star}\) is an asymptotically centered Gaussian vector of size \(k\) 
+	with variance matrix \(I_{\pi^\star}\), and \(Y_{\Gamma^\star}\) is a random 
+	\(k \times k\) matrix with independent Gaussian components 
+	\((Y_{\Gamma^\star})_{kl} \sim \mathcal N (0, (I_{\Gamma^\star})_{kl})\).
+	\label{prop:LAN}
+\end{proposition}
+
+\subsection{Proofs of theorems}
+
+\begin{proof}[Idea of proof of Theorem \ref{thm:main-result}]
+	The idea is to decompose the sum forming the observed likelihood into three 
+	terms:
+	\begin{equation}
+		\sum_{z \in \mathcal Z} p_{\theta} (z, a) = \sum_{z \sim z^\star} 
+		p_{\theta} (z, a) + \sum_{\substack{z \not \sim z^\star \\ z \in 
+				S(z^\star)}} p_{\theta} (z, a) + \sum_{\substack{z \not \sim z^\star 
+				\\ z 
+				\not \in S(z^\star)}} p_{\theta} (z, a).
+	\end{equation}
+	
+	On the right hand side, the first sum contains only those assignments 
+	equivalent to the true one, and it is the only term that asymptotically 
+	contributes to the left hand side; the second sum contains the assignments 
+	not equivalent to the true one, but in a certain neighborhood of it 
+	(\textit{i.e.}, ``close'' to it, up to equivalence); the third term contains 
+	assignments not equivalent to the true one, and distant from it.
+	
+	This idea been given, the proof becomes fairly technical, and is concerned on 
+	proving concentration inequalities of large and small deviations in order to 
+	eliminate the two last sums, and then to quantify the contribution of the first 
+	one.
+\end{proof}
+
+\begin{proof}[Proof of Theorem \ref{thm:consistency-mle}]
+	Assume that \(\Vert \hat \theta_c (z^\star) - \hat \theta_{\text{MLE}} \Vert = 
+	o_P (1)\). Writing the expansion of Equation \eqref{eq:expansion} for \(\hat 
+	\theta_c (z^\star)\), then for \(\hat \theta_{\text{MLE}}\), then substracting 
+	both, one obtains
+	\begin{multline}
+		\mathcal{L}^\star_c (\hat \theta_c (z^\star)) - \mathcal{L}^\star_c (\hat 
+		\theta_{\text{MLE}}) = \\
+		o_P (1) + (1 + o_P (1)) 
+		n (\hat \pi_c (z^\star) - \hat \pi_{\text{MLE}})^t I_{\pi^\star} (\hat 
+		\pi_c 
+		(z^\star) - \hat \pi_{\text{MLE}}) \\
+		+ n^2 \textup{Tr} \left[ \left\{ (\hat \Gamma_c (z^\star) - \hat 
+		\Gamma_{\text{MLE}}) \odot (\hat \Gamma_c (z^\star) - \hat 
+		\Gamma_{\text{MLE}}) \right\}^t I_{\Gamma^\star} \right])
+		\label{eq:expansion_diff}
+	\end{multline}
+	where the terms of first order vanish by maximality of \(\hat \theta_c 
+	(z^\star)\). Now suppose that \(\min_{\sigma \in S_k} \hat \pi_{\text{MLE}} - 
+	\hat \pi_c (z^\star) \neq o_P (n^{-1/2})\) or that \(\min_{\sigma \in S_k} 
+	\hat \Gamma_{\text{MLE}} - \hat \Gamma_c (z^\star) \neq o_P (n^{-1})\). 
+	This implies, by Equation \eqref{eq:expansion_diff}, that
+	\begin{equation}
+		\mathcal{L}^\star_c (\hat \theta_c (z^\star)) - \mathcal{L}^\star_c 
+		(\sigma(\hat 
+		\theta_{\text{MLE}})) = \Omega_P (1).
+		\label{eq:asymp-diff-liks}
+	\end{equation}
+	
+	If instead \(\Vert \hat \theta_c (z^\star) - \hat \theta_{\text{MLE}}\Vert = 
+	\Omega(1)\), then by Proposition \ref{prop:LAN}, \(\mathcal L^\star_c\) has 
+	positive curvature and a unique maximum at \(\hat \theta_c (z^\star)\), thus 
+	Equation \eqref{eq:asymp-diff-liks} holds in either case.
+	
+	However, by definition \(\hat \theta_c (z^\star)\) maximizes the complete 
+	likelihood ratio \(p_{\theta} (z^\star, a)/p_{\theta^\star} (z^\star, a)\), 
+	and \(\hat \theta_{\text{MLE}}\) maximizes the likelihood ratio 
+	\(p_{\theta} (a)/p_{\theta^\star} (a)\). Unless the parameter space is 
+	specifically constrained, asymptotically these estimators do not exhibit 
+	symmetry, as the probability of this happening equals the product of the 
+	probabilities of each equations of the form \(\hat \pi_i = \hat \pi_j\) or 
+	\(\hat \Gamma_{kl} = \hat \Gamma_{k^\prime l^\prime}\) holding. Thus, 
+	Theorem \ref{thm:main-result} implies
+	\begin{equation}
+		\left| \frac{p_{\hat \theta_c (z^\star)}(a, z^\star)}{p_{\theta^\star} (a, 
+			z^\star)} - \max_{\sigma \in S_k} \frac{p_{\hat \theta_{\text{MLE}}}(a, 
+			z^\star)}{p_{\theta^\star} (a, z^\star)} \right| = o_P (1).
+	\end{equation}
+	This is a contradiction with Equation \eqref{eq:asymp-diff-liks}. 
+\end{proof}
+
+\begin{proof}[Proof of Theorem \ref{thm:consistency-var}]
+	After some modifications, aiming to arrive at something similar to Theorem 
+	\ref{thm:main-result} for the variational estimator, the proof will be exactly 
+	the same as that of 
+	Theorem \ref{thm:consistency-mle}. 
+	
+	Let \(\delta_z\) denote a Dirac mass at 
+	\(z\). Then, the following chain of inequalities hold for any \(\theta\) and any 
+	\(z\):
+	\begin{equation*}
+		p_{\theta}(z, a) \leq \exp(F(\delta_z, \theta)) \leq \max_{q \in Q} \exp(F(q, 
+		\theta)) \leq p_{\theta}(a).
+	\end{equation*}
+	Dividing by \(p_{\theta^\star}(a)\), this becomes
+	\begin{equation*}
+		\frac{p_{\theta}(z, a)}{p_{\theta^\star}(a)} \leq \frac{\max_{q \in Q} 
+			\exp(F(q, 
+			\theta))}{p_{\theta^\star}(a)} \leq \frac{p_{\theta}(a)}{p_{\theta^\star}(a)},
+	\end{equation*}
+	and in particular,
+	\begin{equation}
+		\max_{z \sim z^\star} \frac{p_{\theta}(z, a)}{p_{\theta^\star}(a)} = 
+		\max_{\theta^\prime \sim \theta} \frac{p_{\theta^\prime}(z^\star, 
+			a)}{p_{\theta^\star}(a)} \leq \frac{\max_{q \in Q} \exp(F(q, 
+			\theta))}{p_{\theta^\star}(a)}.
+	\end{equation}
+	Since \(p_{\theta^\star}(a) = \text{\#Sym}(\theta^\star) 
+	p_{\theta^\star}(z^\star, a)(1 + o_P(1))\), using Theorem 
+	\ref{thm:main-result} yields:
+	\begin{equation}
+		\max_{\theta^\prime \sim \theta} \frac{p_{\theta^\prime}(z^\star, 
+			a)}{p_{\theta^\star}(a)}(1 + o_P(1)) \leq \frac{\max_{q \in Q} \exp(F(q, 
+			\theta))}{p_{\theta^\star}(z^\star, a)} \leq \text{\#Sym}(\theta) 
+		\max_{\theta^\prime \sim \theta} \frac{p_{\theta^\prime}(z^\star, 
+			a)}{p_{\theta^\star}(z^\star, a)}(1 + o_P(1)) + o_P(1).
+	\end{equation}
+	Unless the parameter space is constrained specifically for this, \(\hat 
+	\theta_{\text{var}}\) does not exhibit symmetry with high probability, and 
+	then the same proof by contradiction as in Theorem 
+	\ref{thm:consistency-mle} yields the result.
+\end{proof}
+
+\end{document}

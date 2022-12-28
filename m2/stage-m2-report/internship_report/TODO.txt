@@ -1,5 +1,0 @@
-* Escrever parte de topologia asintótica.
-* Arrumar capítulo do SBM em teoremas e provas ao invés de contas jogadas.
-* Adicionar os resultados numéricos para o VEM.
-* Mostrar que a likelihood de fato aumenta no VEM. Já está escrito eu acho que
-  na página 17.

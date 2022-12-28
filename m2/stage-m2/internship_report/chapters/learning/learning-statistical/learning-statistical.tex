@@ -1,0 +1,242 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{./images/}}}
+
+\begin{document}
+
+\section{Consistency of variational estimator}  % ⭕️
+\label{sec:variational-consistency}
+This section explains how the consistency of the variational estimator is shown. 
+But first some definitions, then hypotheses, are needed.
+
+\subsection{Definitions}
+The main result is formulated in terms of different likelihood 
+ratios, which are defined as follows.
+
+\begin{definition}[Observed likelihood ratio]
+	Let \(A\) be an observation from an \(\text{SBM}(n, \theta^\star)\). The 
+	\textit{observed likelihood ratio} is the following function of \(\theta\):
+	\begin{equation}
+		\frac{p_\theta (A)}{p_{\theta^\star} (A)}.
+	\end{equation}
+\end{definition}
+
+\begin{definition}[Complete likelihood ratio]
+	Let \((z^\star, A)\) be a realization from an \(\text{SBM}(n, \theta^\star)\). 
+	The \textit{complete likelihood ratio} is the following function of \(\theta\):
+	\begin{equation}
+		\frac{p_\theta (z^\star, 
+			A)}{p_{\theta^\star} (z^\star, A)}.
+	\end{equation}
+\end{definition}
+
+In what follows, denote by \(S_k\) the set of permutations of \(\{1, \dots, k\}\).
+
+\begin{definition}[Permutation of vectors]
+	Let \(\sigma \in S_k\) be a permutation, and \(\pi\) be a \(k\)-dimensional 
+	vector. Then, \(\sigma(\pi)\) is the vector with entries
+	\begin{equation}
+		\sigma(\pi)_{i} \coloneqq \pi_{\sigma(i)}.
+	\end{equation}
+\end{definition}
+
+\begin{definition}[Permutation of matrices]
+	Let \(\sigma \in S_k\) be a permutation, and \(\Gamma\) be a \(k \times k\) 
+	matrix. Then \(\sigma(\Gamma)\) denotes the simultaneous action of 
+	\(\sigma\) on the rows and columns of \(\Gamma\). That is, 
+	\(\sigma(\Gamma)\) is the matrix with entries
+	\begin{equation}
+		\sigma(\Gamma)_{ij} \coloneqq \Gamma_{\sigma(i) \sigma(j)}.
+	\end{equation}
+\end{definition}
+
+\begin{definition}[Permutation of community assignments]
+	Let \(\sigma \in S_k\) be a permutation and \(z \in \mathcal Z\) be a 
+	community assignment. \(\sigma\) acts naturally on \(z\) as \(\sigma(z) 
+	\coloneqq 
+	(\sigma(z_1), \dots, \sigma(z_n))\). Both \(\sigma(z) \in \mathcal Z\) and 
+	\(\sigma\) will be called a \textit{permutation of 
+		community assignments} (or \textit{of community labels}).
+\end{definition}
+
+\begin{definition}[Permutation of parameters]
+	Let \(\sigma \in S_k\) be a permutation, and \(\theta = (\pi, \Gamma)\) be 
+	the parameter of some SBM. Then \(\sigma(\theta) \coloneqq (\sigma(\pi), 
+	\sigma(\Gamma))\) is the \textit{permutation of parameter \(\theta\) under 
+		\(\sigma\)}.
+\end{definition}
+
+In the SBM, there exist properties which are invariant under 
+permutations. This naturally raises a notion of \textit{equivalence} and 
+\textit{symmetry}.
+
+\begin{definition}[Equivalences]
+	The following are different notions of \textit{equivalence}.
+	\begin{itemize}
+		\item \textit{Equivalence of community assignments:} two community 
+		assignments \(z\) and 
+		\(z^\prime\) are said to be \textit{equivalent} if there exists some 
+		\(\sigma \in S_k\) such that \(z^\prime = \sigma(z)\). In this case, one 
+		denotes \(z \sim z^\prime\).
+		\item \textit{Equivalence of parameters:} two parameters \(\theta\) and 
+		\(\theta^\prime\) are said to be \textit{equivalent} if there exists some 
+		\(\sigma \in S_k\) such that \(\theta^\prime = \sigma(\theta)\).
+		\item \textit{Parameter-assignment equivalence:} two pairs \((\theta, z)\) 
+		and \((\theta^\prime, z^\prime)\) are said to be equivalent if there exists 
+		a permutation \(\sigma \in S_k\) such that \(\Gamma^\prime = 
+		\sigma(\Gamma)\) and \(z^\prime = \sigma(z)\).
+	\end{itemize}
+	\label{def:equivalences}
+\end{definition}
+
+Symmetry is a stronger notion.
+
+\begin{definition}[Model symmetry]
+	The parameter \(\theta\) is said to \textit{exhibit symmetry to the 
+		permutation \(\sigma\)} if \(\theta = \sigma(\theta)\). It is said to 
+	\textit{exhibit symmetry} if it exhibits symmetry for all permutations 
+	\(\sigma \in S_k\).
+\end{definition}
+\begin{notation}
+	Define \(\text{\#Sym}(\theta)\) as the number of permutations for which 
+	\(\theta\) exhibits symmetry.
+\end{notation}
+
+It is possible to define a distance, up to equivalence, on the set of community 
+assignments. The following two definitions are not needed to state the results, 
+but are needed to prove them.
+
+\begin{definition}[Distance, up to equivalence, on community assignments]
+	The \textit{distance, up to equivalence,} between any two community 
+	assignments 
+	\(z_1\) and \(z_2\) is defined as
+	\begin{equation}
+		d_{\sim} (z_1, z_2) \coloneqq \inf_{z^\prime \sim z_1} \Delta (z^\prime, 
+		z_2),
+	\end{equation}
+	where \(\Delta(x, y) \coloneqq \sum_{i=1}^n \mathbf{1}_{x_i \neq y_i}\) is 
+	the Hamming norm.
+\end{definition}
+\begin{remark}
+	Without much hassle, this distance can also be written as a distance between 
+	community matrices \(\mathbf{z}_1, \mathbf{z}_2\).
+\end{remark}
+
+Having a distance allows one to define neighborhoods of radius \(r\) around a 
+community assignment, up to equivalence.
+
+\begin{definition}[Set of local assignments]
+	Denote by \(S(z, r)\) the set of community assignments that have some 
+	representative with relative distance less than \(r\) to \(z\):
+	\begin{equation}
+		S(z, r) \coloneqq \{z^\prime \in \mathcal Z: d_{\sim}(z, z^\prime) 
+		\leq n r\}
+	\end{equation}
+\end{definition}
+
+\subsection{Hypotheses}
+
+Here are the hypotheses needed for the results. 
+
+\begin{notation}
+	In what follows, if \(S\) is a set 
+	in a topological space, \(\mathring{S}\) denotes its interior.
+\end{notation}
+
+Recall that \(A_{ij} \vert Z \sim \text{Ber}(\Gamma_{Z_i Z_j})\). The probability 
+mass function of this Bernoulli distribution may be written as
+\begin{equation*}
+	\exp{\left(\log(1 - \Gamma_{Z_i Z_j}) + a_{ij} \log \left(\frac{\Gamma_{Z_i 
+				Z_j}}{1 
+			- \Gamma_{Z_i Z_j}}\right)\right)},
+\end{equation*}
+showing that it is in the regular exponential family in canonical form with 
+natural parameter \(\alpha \coloneqq \log(\Gamma_{Z_i Z_j} / (1 - 
+\Gamma_{Z_i Z_j}))\) and \(-\psi(\Gamma) \coloneqq \log (1 - \Gamma_{Z_i 
+	Z_j})\). It will be useful to know that \((\psi^\prime)^{-1}(\Gamma_ij) = 
+(\Gamma_{ij} - 1)/\Gamma_{ij}\). Assume that the natural parameter \(\alpha\) 
+lives in a space \(\mathcal 
+A\). The following hypotheses is assumed henceforth.
+\begin{hypothesis}[On parameter space]
+	There exists \(c > 0\) and a compact \(C_{\alpha} \subset 
+	\mathring{\mathcal{A}}\) such that
+	\begin{equation*}
+		\Theta \subset [c, 1-c]^k \times C_{\alpha}^{k \times k}.
+	\end{equation*}
+	\label{hyp:1}
+\end{hypothesis}
+
+\begin{hypothesis}[On true parameter]
+	The true parameter \(\theta^\star\) lies in the relative interior of \(\Theta\).
+	\label{hyp:2}
+\end{hypothesis}
+
+\begin{hypothesis}[On identifiability]
+	The true parameter \(\theta^\star\) is identifiable, up to equivalence (see 
+	Definition \ref{def:equivalences}).
+	\label{hyp:3}
+\end{hypothesis}
+
+\subsection{Consistency results}
+The proof of the results of this subsection are all in Section 
+\ref{sec:variational-consistency-proofs}. The following theorem is key for showing 
+the 
+consistency results that follow it.
+\begin{theorem}
+	Let \((z^\star, A)\) be a realization of an \(\text{SBM}(n, \theta^\star)\). 
+	Assume hypotheses \ref{hyp:1}, \ref{hyp:2}, \ref{hyp:3}, and also that the 
+	number of communities \(k\) is known. Then,
+	\begin{equation}
+		\frac{p_\theta(A)}{p_{\theta^\star}(A)} = 
+		\frac{\text{\#Sym}(\theta)}{\text{\#Sym}(\theta^\star)} 
+		\max_{\theta^\prime \sim \theta} \frac{p_{\theta^\prime}( 
+			z^\star, A)}{p_{\theta^\star}(z^\star, A)} (1 + o_P (1)) + o_P(1),
+	\end{equation}
+	where both \(o_P\) are uniform over all \(\theta \in \Theta\).
+	\label{thm:main-result}
+\end{theorem}
+
+\begin{remark}
+	The intuitive meaning of Theorem \ref{thm:main-result} is that, under the 
+	specified (and quite general) hypotheses, the observed likelihood ratio 
+	``asymptotically behaves like'' the complete likelihood ratio, up to a 
+	bounded multiplicative factor and equivalence.
+\end{remark}
+
+The consistency of maximum likelihood and variational estimators for the SBM 
+follows from Theorem \ref{thm:main-result}.
+\begin{theorem}
+	There exists a permutation \(\sigma \in S_k\) such that
+	\begin{equation}
+		\begin{aligned}
+			\hat \pi_c (z^\star) - \sigma(\hat \pi_{\text{MLE}}) &= o_P (n^{-1/2}), \\
+			\hat \Gamma_c (z^\star) - \sigma(\hat \Gamma_{\text{MLE}}) &= o_P 
+			(n^{-1}).
+		\end{aligned}
+	\end{equation}
+	\label{thm:consistency-mle}
+\end{theorem}
+
+The following theorem establishes the consistency of the variational estimator.
+\begin{theorem}
+	Assume hypotheses \ref{hyp:1}, \ref{hyp:2}, \ref{hyp:3}. There exists a 
+	permutation \(\sigma \in S_k\) such that
+	\begin{equation}
+		\begin{aligned}
+			\hat \pi_c (z^\star) - \sigma(\hat \pi_{\text{var}}) &= o_P (n^{-1/2}), \\
+			\hat \Gamma_c (z^\star) - \sigma(\hat \Gamma_{\text{var}}) &= o_P 
+			(n^{-1}).
+		\end{aligned}
+	\end{equation}
+	\label{thm:consistency-var}
+\end{theorem}
+
+\begin{remark}
+	Theorem \ref{thm:consistency-mle} (respectively Theorem 
+	\ref{thm:consistency-var}) 
+	implies the consistency of the maximum likelihood estimator (respectively 
+	variational estimator), since it asymptotically approaches the maximum 
+	complete likelihood estimator which in its turn \textit{is} consistent by 
+	Proposition \ref{prop:consistency-complete-mle}.
+\end{remark}
+
+\end{document}

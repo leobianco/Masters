@@ -1,0 +1,50 @@
+\documentclass[../../main.tex]{subfiles} % Allows individual compilation
+\graphicspath{{\subfix{./images/}}}
+
+\begin{document}
+
+In this report, the problem of identifying particular groups of nodes on a graph, 
+called \textit{communities}, was studied from a variety of angles. First, methods 
+originating from a statistical point of view were constructed: one posits a model for 
+the observed graph, then proceeds to infer this model's parameters. Here, the 
+particular case of the Stochastic Block Model as a model and the Variational EM as 
+inference algorithm were developed. Then, moving to a different standpoint, 
+methods based on the spectral analysis of certain graph operators were studied. 
+These methods generally approach different types of cut problems on graphs. They 
+deal with a relatively simpler mathematical formalism, and are very popular. Once 
+these methods were explained, the focus became on understanding how to quantify 
+their quality, and present two arguments showing that these methods indeed 
+(asymptotically) work when applied to graphs arising as observations of the SBM.
+
+Here are some possible directions of future research. First, consider the problem of 
+understanding the \textit{robustness} of these algorithms. While they have an 
+extensive theoretical literature studying them, it is known that they may fail to work 
+in a variety of situations, be it in applications on real graphs, be it by theoretically 
+perturbing the model. Recently, \cite{acharya__2022}, has proposed to study the 
+robust estimation of the parameter of an Erd\H{o}s-Rényi model that is ``attacked'' 
+by an adversary capable of modifying an \(\varepsilon\)-portion of edges. Also 
+recently, \cite{liu__2022} have extended this type of analysis to the SBM. Thus one 
+line of research in robustness is that of adversarial attacks.
+
+Another line of research develops spectral methods robust to perturbations of the 
+sparse SBM. It was not very understood why spectral algorithms failed in the sparse 
+SBM or how to remedy this, until the development of spectral methods based on the 
+non-backtracking matrix \cite{abbe_community_2017}. There is now a large 
+literature on spectral methods for the sparse SBM. However, it was noted in 
+\cite{abbe_graph_2020} that mixing the SBM with a random geometric graph model 
+breaks these methods due to the introduction of local loops in the locally tree-like 
+structure of the SBM. Thus this is a different direction on the research of robust 
+methods for community detection.
+
+A different possible line of research is that of model selection. The two algorithms 
+described in this report, and many others, require knowledge of the number \(k\) of 
+communities beforehand. However, in practice, when one 
+observes a graph this quantity is not known and thus these methods cannot be 
+applied. Naturally, the search for methods of estimating the number of communities 
+is an important subfield of community detection. In 
+\cite{wang_likelihood-based_2016}, a probabilistic approach is proposed, based on 
+the optimization of a BIC-like criterion. More recently, \cite{le_estimating_2019} 
+propose a spectral approach for the estimation of the number of communities. 
+However, there is still much ground to be covered in order to answer this question.
+
+\end{document}
